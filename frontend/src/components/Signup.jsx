@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "../firebaseConfig";
-
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Signup = () => {
+  const navigate = useNavigate();
+  const { signup } = useAuth();
   const [step, setStep] = useState(1); // 1: Role Selection, 2: Form
   const [role, setRole] = useState('');
   const [formData, setFormData] = useState({
@@ -120,30 +120,27 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
-      // TODO: Implement actual signup API call
       const signupData = {
         ...formData,
         role
       };
-      console.log('Signup data:', signupData);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Handle successful signup
-      alert('Account created successfully!');
-      
+
+      await signup(signupData);
+      alert('Account created successfully! Please login to continue.');
+      navigate('/login');
+
     } catch (error) {
       console.error('Signup error:', error);
-      setErrors({ general: 'Signup failed. Please try again.' });
+      const errorMessage = error.response?.data?.message || 'Signup failed. Please try again.';
+      setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);
     }
