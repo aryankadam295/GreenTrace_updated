@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
-    emailOrPhone: '',
+    email: '',
     password: ''
   });
   const [errors, setErrors] = useState({});
@@ -27,8 +30,10 @@ const Login = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.emailOrPhone.trim()) {
-      newErrors.emailOrPhone = 'Email or phone number is required';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
     }
 
     if (!formData.password) {
@@ -41,43 +46,70 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!validateForm()) {
-    return;
-  }
-
-  setIsLoading(true);
-
-  try {
-    // 🔹 Admin login check (hardcoded)
-    if (
-      formData.emailOrPhone === "GreenPVG@545" &&
-      formData.password === "rpna@9928"
-    ) {
-      alert("Admin login successful!");
-      // TODO: Redirect to Admin Dashboard
-      setIsLoading(false);
+    if (!validateForm()) {
       return;
     }
 
-    // TODO: Implement actual login API call for Farmer/Merchant
-    console.log("Login data:", formData);
+    setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      // DEBUG: Log what we're sending
+      console.log('📤 Sending login data:', {
+        email: formData.email,
+        passwordLength: formData.password.length
+      });
 
-    // Handle successful login
-    alert("Login successful!");
-  } catch (error) {
-    console.error("Login error:", error);
-    setErrors({ general: "Login failed. Please try again." });
-  } finally {
-    setIsLoading(false);
-  }
-};
+      // Use the login function from AuthContext
+      const response = await login(formData);
 
+      // DEBUG: Log successful response
+      console.log('✅ Login successful:', response);
+
+      // Redirect based on user role
+      if (response.user?.role === 'farmer') {
+        navigate('/farmer-dashboard');
+      } else if (response.user?.role === 'merchant') {
+        navigate('/merchant-dashboard');
+      } else if (response.user?.role === 'admin') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('❌ Login error:', error);
+
+      // DEBUG: Log detailed error information
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      });
+
+      const errorMessage = error.response?.data?.message ||
+                          error.response?.data?.error ||
+                          'Login failed. Please try again.';
+
+      setErrors({ general: errorMessage });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAdminLogin = () => {
+    setFormData({
+      email: 'admin@greentrace.com',
+      password: ''
+    });
+    setErrors({});
+    // Focus on password field
+    setTimeout(() => {
+      document.getElementById('password').focus();
+    }, 100);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -106,25 +138,25 @@ const Login = () => {
             )}
 
             <div>
-              <label htmlFor="emailOrPhone" className="block text-sm font-medium text-gray-700">
-                Email or Phone Number
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Email Address
               </label>
               <div className="mt-1">
                 <input
-                  id="emailOrPhone"
-                  name="emailOrPhone"
-                  type="text"
+                  id="email"
+                  name="email"
+                  type="email"
                   autoComplete="username"
                   required
-                  value={formData.emailOrPhone}
+                  value={formData.email}
                   onChange={handleChange}
                   className={`appearance-none block w-full px-3 py-2 border ${
-                    errors.emailOrPhone ? 'border-red-300' : 'border-gray-300'
+                    errors.email ? 'border-red-300' : 'border-gray-300'
                   } rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm`}
-                  placeholder="Enter your email or phone number"
+                  placeholder="Enter your email address"
                 />
-                {errors.emailOrPhone && (
-                  <p className="mt-2 text-sm text-red-600">{errors.emailOrPhone}</p>
+                {errors.email && (
+                  <p className="mt-2 text-sm text-red-600">{errors.email}</p>
                 )}
               </div>
             </div>
@@ -190,6 +222,22 @@ const Login = () => {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      {/* Admin Login Section */}
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-blue-50 py-6 px-4 shadow sm:rounded-lg sm:px-10 text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Admin Login</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Click below to quickly fill admin credentials
+          </p>
+          <button
+            onClick={handleAdminLogin}
+            className="w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Login as Admin
+          </button>
         </div>
       </div>
     </div>
