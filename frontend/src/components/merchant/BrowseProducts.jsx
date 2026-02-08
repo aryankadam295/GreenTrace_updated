@@ -101,6 +101,21 @@ const BrowseProducts = () => {
     }
   };
 
+  const startChat = async (productId) => {
+    try {
+      const response = await api.post('/chat', { productId, message: 'Hi! I\'m interested in your product. Can we discuss the details?' });
+      setMessage('Chat started successfully! Check your Chat tab.');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      if (error.response?.status === 200 && error.response?.data?.message === 'Chat already exists for this product') {
+        setMessage('Chat already exists! Check your Chat tab.');
+      } else {
+        setMessage(error.response?.data?.message || 'Error starting chat');
+      }
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-IN');
   };
@@ -323,6 +338,12 @@ const BrowseProducts = () => {
                       className="bg-red-500 text-white py-2 px-3 rounded text-sm hover:bg-red-600 transition-colors"
                     >
                       ❤️
+                    </button>
+                    <button
+                      onClick={() => startChat(product._id)}
+                      className="bg-blue-500 text-white py-2 px-3 rounded text-sm hover:bg-blue-600 transition-colors"
+                    >
+                      💬 Chat
                     </button>
                   </div>
                 </div>

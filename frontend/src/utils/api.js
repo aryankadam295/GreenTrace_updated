@@ -157,3 +157,12 @@ export const adminAPI = {
   getActivities: (params) => api.get('/admin/activities', { params }),
   getTransactions: (params) => api.get('/admin/transactions', { params })
 };
+
+// Chat API endpoints
+export const chatAPI = {
+  getUserChats: () => api.get('/chat'),
+  getUnreadCount: () => api.get('/chat/unread-count'),
+  createChat: (data) => api.post('/chat', data),
+  getChatMessages: (chatId) => api.get(`/chat/${chatId}`),
+  sendMessage: (chatId, data) => api.post(`/chat/${chatId}/messages`, data)
+};

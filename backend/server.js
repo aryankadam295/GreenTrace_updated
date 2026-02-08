@@ -9,6 +9,7 @@ import productRoutes from "./routes/productRoutes.js";
 import inquiryRoutes from "./routes/inquiryRoutes.js";
 import merchantRoutes from "./routes/merchantRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import chatRoutes from "./routes/chatRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -31,6 +32,7 @@ app.use("/api/products", productRoutes);
 app.use("/api/inquiries", inquiryRoutes);
 app.use("/api/merchant", merchantRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
