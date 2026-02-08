@@ -7,6 +7,7 @@ import ProductList from './farmer/ProductList';
 import InquiryList from './farmer/InquiryList';
 import Analytics from './farmer/Analytics';
 import Chatbox from './farmer/Chatbox';
+import CropDiseasePrediction from './farmer/CropDiseasePrediction';
 
 const FarmerDashboard = () => {
   const { user, isAuthenticated } = useAuth();
@@ -50,8 +51,9 @@ const FarmerDashboard = () => {
     { id: 'upload', label: 'Upload Product', icon: '📦' },
     { id: 'products', label: 'My Products', icon: '🌾' },
     { id: 'inquiries', label: 'Inquiries', icon: '💬' },
-    { id: 'chat', label: 'Chat', icon: '💬' },
-    { id: 'analytics', label: 'Reports', icon: '📈' }
+    { id: 'chat', label: 'Chat', icon: '💭' },
+    { id: 'analytics', label: 'Reports', icon: '📈' },
+    { id: 'CropDiseasePrediction', label: 'Crop Disease Prediction', icon: '🔬' }
   ];
 
   const renderContent = () => {
@@ -68,6 +70,8 @@ const FarmerDashboard = () => {
         return <Chatbox />;
       case 'analytics':
         return <Analytics analytics={analytics} />;
+      case 'CropDiseasePrediction':
+        return <CropDiseasePrediction />;
       default:
         return <DashboardOverview analytics={analytics} />;
     }
@@ -86,29 +90,44 @@ const FarmerDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg">
-        <div className="p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Farmer Dashboard</h2>
-          <p className="text-sm text-gray-600">Welcome, {user?.fullName}</p>
+      {/* Enhanced Sidebar */}
+      <div className="farmer-sidebar w-64 bg-gradient-to-b from-green-700 to-green-900 shadow-2xl">
+        <div className="sidebar-header p-6 border-b border-green-600">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+              <span className="text-2xl">🌾</span>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white">Farmer Portal</h2>
+            </div>
+          </div>
+          <p className="text-sm text-green-100 mt-2">Welcome, {user?.fullName}</p>
         </div>
         
-        <nav className="mt-6">
+        <nav className="mt-4 px-3">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center px-6 py-3 text-left hover:bg-green-50 transition-colors ${
+              className={`sidebar-item w-full flex items-center px-4 py-3 mb-2 text-left rounded-lg transition-all duration-200 ${
                 activeTab === item.id
-                  ? 'bg-green-100 border-r-4 border-green-600 text-green-700'
-                  : 'text-gray-700'
+                  ? 'bg-white text-green-700 shadow-lg font-semibold'
+                  : 'text-green-50 hover:bg-green-600 hover:text-white'
               }`}
             >
               <span className="text-xl mr-3">{item.icon}</span>
-              {item.label}
+              <span className="text-sm">{item.label}</span>
             </button>
           ))}
         </nav>
+
+        {/* Sidebar Footer */}
+        <div className="absolute bottom-0 w-64 p-4 border-t border-green-600">
+          <div className="bg-green-800 rounded-lg p-3 text-center">
+            <p className="text-xs text-green-200 mb-1">GreenTrace</p>
+            <p className="text-xs text-green-300">Farm Management System</p>
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -117,6 +136,61 @@ const FarmerDashboard = () => {
           {renderContent()}
         </div>
       </div>
+
+      <style>{`
+        .farmer-sidebar {
+          position: relative;
+          min-height: 100vh;
+        }
+
+        .sidebar-header {
+          background: linear-gradient(135deg, rgba(46, 125, 50, 0.1) 0%, transparent 100%);
+        }
+
+        .sidebar-item {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .sidebar-item::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          height: 100%;
+          width: 4px;
+          background: #4caf50;
+          transform: scaleY(0);
+          transition: transform 0.3s ease;
+        }
+
+        .sidebar-item.bg-white::before {
+          transform: scaleY(1);
+        }
+
+        .sidebar-item:hover {
+          transform: translateX(4px);
+        }
+
+        .sidebar-item.bg-white {
+          transform: translateX(8px);
+        }
+
+        @media (max-width: 768px) {
+          .farmer-sidebar {
+            width: 80px;
+          }
+          
+          .sidebar-item span:last-child {
+            display: none;
+          }
+          
+          .sidebar-header h2,
+          .sidebar-header p {
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 };

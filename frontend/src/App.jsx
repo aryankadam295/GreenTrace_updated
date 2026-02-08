@@ -17,7 +17,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AccessDenied from './components/AccessDenied';
 
 
-
 function App() {
   return (
     <AuthProvider>
