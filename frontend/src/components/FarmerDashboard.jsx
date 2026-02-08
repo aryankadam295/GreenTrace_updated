@@ -7,6 +7,7 @@ import ProductList from './farmer/ProductList';
 import InquiryList from './farmer/InquiryList';
 import Analytics from './farmer/Analytics';
 import Chatbox from './farmer/Chatbox';
+import EquipmentHub from './farmer/equipment/EquipmentHub';
 
 const FarmerDashboard = () => {
   const { user, isAuthenticated } = useAuth();
@@ -50,6 +51,7 @@ const FarmerDashboard = () => {
     { id: 'upload', label: 'Upload Product', icon: '📦' },
     { id: 'products', label: 'My Products', icon: '🌾' },
     { id: 'inquiries', label: 'Inquiries', icon: '💬' },
+    { id: 'equipment', label: 'Equipment Sharing', icon: '🚜' },
     { id: 'chat', label: 'Chat', icon: '💬' },
     { id: 'analytics', label: 'Reports', icon: '📈' }
   ];
@@ -64,6 +66,8 @@ const FarmerDashboard = () => {
         return <ProductList />;
       case 'inquiries':
         return <InquiryList />;
+      case 'equipment':
+        return <EquipmentHub />;
       case 'chat':
         return <Chatbox />;
       case 'analytics':
