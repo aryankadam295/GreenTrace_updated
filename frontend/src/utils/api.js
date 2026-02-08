@@ -166,3 +166,42 @@ export const chatAPI = {
   getChatMessages: (chatId) => api.get(`/chat/${chatId}`),
   sendMessage: (chatId, data) => api.post(`/chat/${chatId}/messages`, data)
 };
+
+// Equipment API endpoints
+export const equipmentAPI = {
+  // Equipment CRUD
+  create: (formData) => api.post('/equipment', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  getMyEquipment: (params) => api.get('/equipment/my-equipment', { params }),
+  browseEquipment: (params) => api.get('/equipment/browse', { params }),
+  getEquipmentById: (id) => api.get(`/equipment/${id}`),
+  update: (id, formData) => api.put(`/equipment/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  updateStatus: (id, data) => api.patch(`/equipment/${id}/status`, data),
+  delete: (id) => api.delete(`/equipment/${id}`),
+  getAnalytics: () => api.get('/equipment/analytics'),
+
+  // Bookings
+  createBooking: (data) => api.post('/equipment/bookings', data),
+  getMyBookings: (params) => api.get('/equipment/bookings/my-bookings', { params }),
+  getBookingRequests: (params) => api.get('/equipment/bookings/requests', { params }),
+  getBookingById: (id) => api.get(`/equipment/bookings/${id}`),
+  updateBookingStatus: (id, data) => api.patch(`/equipment/bookings/${id}/status`, data),
+  checkAvailability: (params) => api.get('/equipment/bookings/check-availability', { params }),
+  getRenterAnalytics: () => api.get('/equipment/bookings/renter-analytics'),
+
+  // Reviews
+  createReview: (data) => api.post('/equipment/reviews', data),
+  getEquipmentReviews: (equipmentId, params) => api.get(`/equipment/reviews/${equipmentId}`, { params }),
+  getMyReviews: (params) => api.get('/equipment/reviews/my-reviews', { params }),
+  canReview: (bookingId) => api.get(`/equipment/reviews/can-review/${bookingId}`),
+
+  // Chats
+  getEquipmentChats: () => api.get('/equipment/chats'),
+  getUnreadCount: () => api.get('/equipment/chats/unread'),
+  createEquipmentChat: (data) => api.post('/equipment/chats', data),
+  getChatMessages: (chatId) => api.get(`/equipment/chats/${chatId}`),
+  sendMessage: (chatId, data) => api.post(`/equipment/chats/${chatId}/messages`, data)
+};

@@ -10,6 +10,10 @@ import inquiryRoutes from "./routes/inquiryRoutes.js";
 import merchantRoutes from "./routes/merchantRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+<<<<<<< HEAD
+=======
+import equipmentRoutes from "./routes/equipmentRoutes.js";
+>>>>>>> origin/pranav-equipment-sharing
 
 dotenv.config();
 const app = express();
@@ -33,6 +37,10 @@ app.use("/api/inquiries", inquiryRoutes);
 app.use("/api/merchant", merchantRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/chat", chatRoutes);
+<<<<<<< HEAD
+=======
+app.use("/api/equipment", equipmentRoutes);
+>>>>>>> origin/pranav-equipment-sharing
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

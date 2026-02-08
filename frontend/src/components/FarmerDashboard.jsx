@@ -7,7 +7,7 @@ import ProductList from './farmer/ProductList';
 import InquiryList from './farmer/InquiryList';
 import Analytics from './farmer/Analytics';
 import Chatbox from './farmer/Chatbox';
-import CropDiseasePrediction from './farmer/CropDiseasePrediction';
+import EquipmentHub from './farmer/equipment/EquipmentHub';
 
 const FarmerDashboard = () => {
   const { user, isAuthenticated } = useAuth();
