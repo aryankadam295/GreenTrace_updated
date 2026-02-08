@@ -7,6 +7,7 @@ import Cart from './merchant/Cart';
 import Wishlist from './merchant/Wishlist';
 import Orders from './merchant/Orders';
 import Analytics from './merchant/Analytics';
+import Chatbox from './merchant/Chatbox';
 
 const MerchantDashboard = () => {
   const { user, isAuthenticated } = useAuth();
@@ -51,6 +52,7 @@ const MerchantDashboard = () => {
     { id: 'wishlist', label: 'Wishlist', icon: '❤️' },
     { id: 'orders', label: 'My Orders', icon: '📦' },
     { id: 'inquiries', label: 'Inquiries', icon: '💬' },
+    { id: 'chat', label: 'Chat', icon: '💬' },
     { id: 'analytics', label: 'Analytics', icon: '📊' }
   ];
 
@@ -69,6 +71,8 @@ const MerchantDashboard = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Inquiries</h2>
           <p className="text-gray-600">Inquiry management coming soon...</p>
         </div>;
+      case 'chat':
+        return <Chatbox />;
       case 'analytics':
         return <Analytics analytics={analytics} />;
       default:
