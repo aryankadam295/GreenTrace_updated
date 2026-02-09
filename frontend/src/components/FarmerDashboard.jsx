@@ -8,6 +8,7 @@ import InquiryList from './farmer/InquiryList';
 import Analytics from './farmer/Analytics';
 import Chatbox from './farmer/Chatbox';
 import EquipmentHub from './farmer/equipment/EquipmentHub';
+import CropDiseasePrediction from './farmer/CropDiseasePrediction';
 
 const FarmerDashboard = () => {
   const { user, isAuthenticated } = useAuth();
@@ -53,6 +54,7 @@ const FarmerDashboard = () => {
     { id: 'inquiries', label: 'Inquiries', icon: '💬' },
     { id: 'chat', label: 'Chat', icon: '💭' },
     { id: 'analytics', label: 'Reports', icon: '📈' },
+    { id: 'equipment', label: 'Equipment Hub', icon: '🚜' },
     { id: 'CropDiseasePrediction', label: 'Crop Disease Prediction', icon: '🔬' }
   ];
 
@@ -70,6 +72,8 @@ const FarmerDashboard = () => {
         return <Chatbox />;
       case 'analytics':
         return <Analytics analytics={analytics} />;
+      case 'equipment':
+        return <EquipmentHub />;
       case 'CropDiseasePrediction':
         return <CropDiseasePrediction />;
       default:
