@@ -13,6 +13,7 @@ import merchantRoutes from "./routes/merchantRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import equipmentRoutes from "./routes/equipmentRoutes.js";
+import cropRoutes from "./routes/cropRoutes.js";
 
 dotenv.config();
 
@@ -42,15 +43,17 @@ app.use("/api/merchant", merchantRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/equipment", equipmentRoutes);
+app.use("/api", cropRoutes);
 
-// Static files (uploads)
+// Static files
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Database connection
 connectDB();
 
 // Server start
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 4000;
+
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

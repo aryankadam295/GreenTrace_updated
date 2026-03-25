@@ -52,32 +52,43 @@ const CropDiseasePrediction = () => {
     setResult(null);
   };
 
-  const handleScanCrop = async () => {
-    setIsLoading(true);
-    setError('');
+const handleScanCrop = async () => {
+  setIsLoading(true);
+  setError('');
 
-    try {
-      // const formData = new FormData();
-      // formData.append('image', selectedImage);
-      // formData.append('crop', selectedCrop);
-      // 
-      // const response = await fetch('YOUR_API_ENDPOINT', {
-      //   method: 'POST',
-      //   body: formData
-      // });
-      // 
-      // const data = await response.json();
-      // setResult(data);
+  try {
+    const formData = new FormData();
+    formData.append('image', selectedImage);
+    formData.append('crop', selectedCrop);
 
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      setError('API integration pending. Please connect your ML model endpoint.');
-    } catch (err) {
-      setError('Failed to analyze image. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const response = await fetch('http://localhost:5000/api/predict-crop', {
+      method: 'POST',
+      body: formData
+    });
 
+    const data = await response.json();
+
+    // convert backend response into your UI structure
+    const formattedResult = {
+      cropName: selectedCrop.toUpperCase(),
+      possibleIssue: data.disease,
+      urgencyLevel: "medium",
+      immediateSteps: [
+        "Remove infected leaves from the plant",
+        "Avoid overwatering the crop",
+        "Apply recommended fungicide or pesticide",
+        "Monitor nearby plants for similar symptoms"
+      ]
+    };
+
+    setResult(formattedResult);
+
+  } catch (err) {
+    setError('Failed to analyze image. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
   const isButtonDisabled = !selectedImage || !selectedCrop || isLoading;
 
   const styles = {
@@ -723,7 +734,7 @@ const CropDiseasePrediction = () => {
                     {result.immediateSteps.map((step, index) => (
                       <li key={index} style={styles.stepsListItem}>
                         <span style={{
-                          position: 'c',
+                          position: 'absolute',
                           left: '0',
                           top: '0.5rem',
                           width: '8px',
