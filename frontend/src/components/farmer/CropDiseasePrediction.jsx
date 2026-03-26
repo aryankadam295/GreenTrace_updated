@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { Upload, Loader, AlertCircle, CheckCircle, Info, Leaf, Activity, Eye, TrendingUp } from 'lucide-react';
+import { Upload, Loader, AlertCircle, CheckCircle, Info, Leaf, Activity, Eye, TrendingUp, Video } from 'lucide-react';
 
 const CropDiseasePrediction = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null);
   const [selectedCrop, setSelectedCrop] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  // NEW: track which mode is active
+  const [uploadMode, setUploadMode] = useState(null); // 'image' | 'video'
 
   const cropOptions = [
     { value: '', label: 'Select a crop', icon: '🌾' },
@@ -36,13 +41,44 @@ const CropDiseasePrediction = () => {
         return;
       }
 
+      // Clear video state and set mode to image
+      setSelectedVideo(null);
+      setVideoPreview(null);
       setSelectedImage(file);
-      
+      setUploadMode('image'); // ✅ explicitly track mode
+
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleVideoUpload = (e) => {
+    const file = e.target.files[0];
+    setError('');
+    setResult(null);
+
+    if (file) {
+      const validTypes = ['video/mp4', 'video/avi', 'video/mov'];
+      if (!validTypes.includes(file.type)) {
+        setError('Please upload a valid video file (MP4, AVI, MOV)');
+        return;
+      }
+
+      const maxSize = 20 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setError('Video size must be less than 20MB');
+        return;
+      }
+
+      // Clear image state and set mode to video
+      setSelectedImage(null);
+      setImagePreview(null);
+      setSelectedVideo(file);
+      setVideoPreview(URL.createObjectURL(file));
+      setUploadMode('video'); // ✅ explicitly track mode
     }
   };
 
@@ -52,44 +88,75 @@ const CropDiseasePrediction = () => {
     setResult(null);
   };
 
-const handleScanCrop = async () => {
-  setIsLoading(true);
-  setError('');
+  const handleScanCrop = async () => {
+    setIsLoading(true);
+    setError('');
 
-  try {
-    const formData = new FormData();
-    formData.append('image', selectedImage);
-    formData.append('crop', selectedCrop);
+    // ✅ Debug logs — check browser console
+    console.log('=== SCAN DEBUG ===');
+    console.log('uploadMode:', uploadMode);
+    console.log('selectedImage:', selectedImage);
+    console.log('selectedVideo:', selectedVideo);
+    console.log('selectedCrop:', selectedCrop);
 
-    const response = await fetch('http://localhost:5000/api/predict-crop', {
-      method: 'POST',
-      body: formData
-    });
+    try {
+      const formData = new FormData();
+      formData.append('crop', selectedCrop);
 
-    const data = await response.json();
+      let endpoint = '';
 
-    // convert backend response into your UI structure
-    const formattedResult = {
-      cropName: selectedCrop.toUpperCase(),
-      possibleIssue: data.disease,
-      urgencyLevel: "medium",
-      immediateSteps: [
-        "Remove infected leaves from the plant",
-        "Avoid overwatering the crop",
-        "Apply recommended fungicide or pesticide",
-        "Monitor nearby plants for similar symptoms"
-      ]
-    };
+      // ✅ Use uploadMode as the single source of truth
+      if (uploadMode === 'video' && selectedVideo) {
+        formData.append('video', selectedVideo);
+        endpoint = `${API_BASE_URL}/api/predict-video`;
+        console.log('✅ Sending to VIDEO endpoint');
+      } else if (uploadMode === 'image' && selectedImage) {
+        formData.append('image', selectedImage);
+        endpoint = `${API_BASE_URL}/api/predict-crop`;
+        console.log('✅ Sending to IMAGE endpoint');
+      } else {
+        throw new Error('No valid file selected. Please upload an image or video.');
+      }
 
-    setResult(formattedResult);
+      console.log('Endpoint:', endpoint);
 
-  } catch (err) {
-    setError('Failed to analyze image. Please try again.');
-  } finally {
-    setIsLoading(false);
-  }
-};
-  const isButtonDisabled = !selectedImage || !selectedCrop || isLoading;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Server error: ${response.status} - ${text}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Response:', data);
+
+      const formattedResult = {
+        cropName: selectedCrop.toUpperCase(),
+        possibleIssue: data.disease,
+        urgencyLevel: 'medium',
+        immediateSteps: [
+          'Remove infected leaves from the plant',
+          'Avoid overwatering the crop',
+          'Apply recommended fungicide or pesticide',
+          'Monitor nearby plants for similar symptoms'
+        ]
+      };
+
+      setResult(formattedResult);
+
+    } catch (err) {
+      console.error('❌ Error:', err);
+      setError(err.message || 'Failed to analyze.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ✅ Button disabled if no file selected (using uploadMode) or no crop or loading
+  const isButtonDisabled = !uploadMode || !selectedCrop || isLoading;
 
   const styles = {
     container: {
@@ -244,6 +311,26 @@ const handleScanCrop = async () => {
       objectFit: 'contain',
       display: 'block'
     },
+    previewVideo: {
+      maxWidth: '100%',
+      maxHeight: '260px',
+      borderRadius: '12px',
+      objectFit: 'contain',
+      display: 'block',
+      background: '#000'
+    },
+    videoInfoBadge: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.4rem',
+      background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)',
+      border: '1px solid #a5d6a7',
+      borderRadius: '50px',
+      padding: '0.35rem 0.9rem',
+      color: '#2e7d32',
+      fontSize: '0.8rem',
+      fontWeight: '600'
+    },
     changeImageBtn: {
       padding: '0.75rem 2rem',
       background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
@@ -256,6 +343,24 @@ const handleScanCrop = async () => {
       transition: 'all 0.3s ease',
       boxShadow: '0 4px 15px rgba(76, 175, 80, 0.3)'
     },
+    orDivider: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1rem',
+      margin: '0.25rem 0'
+    },
+    orDividerLine: {
+      flex: 1,
+      height: '1px',
+      background: 'linear-gradient(to right, transparent, #c8e6c9, transparent)'
+    },
+    orDividerText: {
+      color: '#81c784',
+      fontSize: '0.8rem',
+      fontWeight: '700',
+      letterSpacing: '2px',
+      textTransform: 'uppercase'
+    },
     errorMessage: {
       display: 'flex',
       alignItems: 'center',
@@ -267,8 +372,7 @@ const handleScanCrop = async () => {
       color: '#c62828',
       fontSize: '0.9rem',
       marginTop: '1rem',
-      fontWeight: '500',
-      animation: 'shake 0.5s ease'
+      fontWeight: '500'
     },
     select: {
       width: '100%',
@@ -340,23 +444,12 @@ const handleScanCrop = async () => {
       fontWeight: '700',
       textTransform: 'uppercase',
       letterSpacing: '1px',
-      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)',
-      animation: 'bounceIn 0.6s ease-out'
-    },
-    urgencyHigh: {
-      background: 'linear-gradient(135deg, #ff5252 0%, #d32f2f 100%)',
-      color: 'white',
-      boxShadow: '0 4px 20px rgba(244, 67, 54, 0.4)'
+      boxShadow: '0 4px 15px rgba(0, 0, 0, 0.1)'
     },
     urgencyMedium: {
       background: 'linear-gradient(135deg, #ffa726 0%, #f57c00 100%)',
       color: 'white',
       boxShadow: '0 4px 20px rgba(255, 152, 0, 0.4)'
-    },
-    urgencyLow: {
-      background: 'linear-gradient(135deg, #66bb6a 0%, #43a047 100%)',
-      color: 'white',
-      boxShadow: '0 4px 20px rgba(76, 175, 80, 0.4)'
     },
     resultContent: {
       display: 'flex',
@@ -367,8 +460,7 @@ const handleScanCrop = async () => {
       padding: '1.5rem',
       background: 'linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%)',
       borderRadius: '12px',
-      border: '1px solid #c8e6c9',
-      transition: 'transform 0.3s ease'
+      border: '1px solid #c8e6c9'
     },
     resultItemTitle: {
       color: '#1b5e20',
@@ -409,14 +501,12 @@ const handleScanCrop = async () => {
       background: 'linear-gradient(135deg, #fff9e6 0%, #fff3d9 100%)',
       border: '2px solid #ffd54f',
       borderRadius: '12px',
-      marginTop: '1rem',
-      boxShadow: '0 4px 15px rgba(255, 193, 7, 0.2)'
+      marginTop: '1rem'
     },
     disclaimerIcon: {
       color: '#f57f17',
       flexShrink: 0,
-      marginTop: '0.25rem',
-      filter: 'drop-shadow(0 2px 4px rgba(245, 127, 23, 0.3))'
+      marginTop: '0.25rem'
     },
     disclaimerText: {
       color: '#6d4c00',
@@ -431,7 +521,6 @@ const handleScanCrop = async () => {
     }
   };
 
-  // Inject animations
   const styleSheet = document.createElement('style');
   styleSheet.textContent = `
     @keyframes spin {
@@ -439,53 +528,17 @@ const handleScanCrop = async () => {
       to { transform: rotate(360deg); }
     }
     @keyframes slideInRight {
-      from {
-        opacity: 0;
-        transform: translateX(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-    @keyframes bounceIn {
-      0% {
-        opacity: 0;
-        transform: scale(0.3);
-      }
-      50% {
-        transform: scale(1.05);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-10px); }
-      75% { transform: translateX(10px); }
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
     }
     @media (max-width: 968px) {
-      .content-wrapper-responsive { 
-        grid-template-columns: 1fr !important; 
-      }
+      .content-wrapper-responsive { grid-template-columns: 1fr !important; }
     }
     @media (max-width: 640px) {
-      .container-responsive { 
-        padding: 1rem !important; 
-      }
-      .page-header-responsive h1 { 
-        font-size: 1.8rem !important; 
-      }
-      .card-responsive { 
-        padding: 1.5rem !important; 
-      }
-      .result-header-responsive {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 1rem !important;
-      }
+      .container-responsive { padding: 1rem !important; }
+      .page-header-responsive h1 { font-size: 1.8rem !important; }
+      .card-responsive { padding: 1.5rem !important; }
+      .result-header-responsive { flex-direction: column !important; align-items: flex-start !important; gap: 1rem !important; }
     }
   `;
   if (!document.head.querySelector('#crop-disease-enhanced-styles')) {
@@ -493,106 +546,89 @@ const handleScanCrop = async () => {
     document.head.appendChild(styleSheet);
   }
 
-  const getUrgencyStyle = (level) => {
-    if (level === 'high') return { ...styles.urgencyBadge, ...styles.urgencyHigh };
-    if (level === 'medium') return { ...styles.urgencyBadge, ...styles.urgencyMedium };
-    return { ...styles.urgencyBadge, ...styles.urgencyLow };
+  const cardHoverOn = (e) => {
+    e.currentTarget.style.transform = 'translateY(-4px)';
+    e.currentTarget.style.boxShadow = '0 25px 70px rgba(0, 0, 0, 0.2)';
+  };
+  const cardHoverOff = (e) => {
+    e.currentTarget.style.transform = 'translateY(0)';
+    e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.15)';
+  };
+  const labelHoverOn = (e) => {
+    e.currentTarget.style.borderColor = '#4caf50';
+    e.currentTarget.style.background = 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)';
+    e.currentTarget.style.transform = 'scale(1.02)';
+  };
+  const labelHoverOff = (e) => {
+    e.currentTarget.style.borderColor = '#81c784';
+    e.currentTarget.style.background = 'linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%)';
+    e.currentTarget.style.transform = 'scale(1)';
   };
 
   return (
     <div style={styles.container} className="container-responsive">
       <div style={styles.backgroundPattern}></div>
-      
+
       <div style={styles.pageHeader} className="page-header-responsive">
         <div style={styles.headerBadge}>
           <Leaf size={16} />
           <span>AI-Powered Diagnosis</span>
         </div>
         <h1 style={styles.title}>🌱 Crop Disease Prediction</h1>
-        <p style={styles.subtitle}>Upload an image of your crop and let AI detect potential diseases instantly</p>
+        <p style={styles.subtitle}>Upload an image or video of your crop and let AI detect potential diseases instantly</p>
       </div>
 
       <div style={styles.contentWrapper} className="content-wrapper-responsive">
         {/* Upload Section */}
         <div style={styles.uploadSection}>
-          <div 
-            style={styles.card} 
-            className="card-responsive"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 25px 70px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5)';
-            }}
-          >
+
+          {/* ── Image Upload Card ── */}
+          <div style={styles.card} className="card-responsive" onMouseEnter={cardHoverOn} onMouseLeave={cardHoverOff}>
             <div style={styles.cardHeader}>
-              <div style={styles.cardIcon}>
-                <Upload size={20} />
-              </div>
+              <div style={styles.cardIcon}><Upload size={20} /></div>
               <h2 style={styles.cardTitle}>Upload Crop Image</h2>
             </div>
-            
-            <div>
-              <input
-                type="file"
-                id="crop-image"
-                accept=".jpg,.jpeg,.png"
-                onChange={handleImageUpload}
-                style={styles.fileInput}
-              />
-              <label 
-                htmlFor="crop-image" 
-                style={styles.uploadLabel}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#4caf50';
-                  e.currentTarget.style.background = 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)';
-                  e.currentTarget.style.transform = 'scale(1.02)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = '#81c784';
-                  e.currentTarget.style.background = 'linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%)';
-                  e.currentTarget.style.transform = 'scale(1)';
-                }}
-              >
-                {!imagePreview ? (
-                  <>
-                    <Upload size={56} style={styles.uploadIcon} />
-                    <p style={styles.uploadText}>Click to upload image</p>
-                    <p style={styles.uploadSubtext}>JPG, JPEG or PNG • Max 5MB</p>
-                  </>
-                ) : (
-                  <div style={styles.imagePreview}>
-                    <div style={styles.previewImageWrapper}>
-                      <img src={imagePreview} alt="Crop preview" style={styles.previewImage} />
-                    </div>
-                    <button 
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setSelectedImage(null);
-                        setImagePreview(null);
-                        setResult(null);
-                      }}
-                      style={styles.changeImageBtn}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, #388e3c 0%, #2e7d32 100%)';
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(76, 175, 80, 0.4)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 4px 15px rgba(76, 175, 80, 0.3)';
-                      }}
-                    >
-                      Change Image
-                    </button>
+
+            <input
+              type="file"
+              id="crop-image"
+              accept=".jpg,.jpeg,.png"
+              onChange={handleImageUpload}
+              style={styles.fileInput}
+            />
+            <label
+              htmlFor="crop-image"
+              style={styles.uploadLabel}
+              onMouseEnter={labelHoverOn}
+              onMouseLeave={labelHoverOff}
+            >
+              {!imagePreview ? (
+                <>
+                  <Upload size={56} style={styles.uploadIcon} />
+                  <p style={styles.uploadText}>Click to upload image</p>
+                  <p style={styles.uploadSubtext}>JPG, JPEG or PNG • Max 5MB</p>
+                </>
+              ) : (
+                <div style={styles.imagePreview}>
+                  <div style={styles.previewImageWrapper}>
+                    <img src={imagePreview} alt="Crop preview" style={styles.previewImage} />
                   </div>
-                )}
-              </label>
-            </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSelectedImage(null);
+                      setImagePreview(null);
+                      setUploadMode(null); // ✅ reset mode
+                      setResult(null);
+                    }}
+                    style={styles.changeImageBtn}
+                  >
+                    Change Image
+                  </button>
+                </div>
+              )}
+            </label>
 
             {error && (
               <div style={styles.errorMessage}>
@@ -602,37 +638,87 @@ const handleScanCrop = async () => {
             )}
           </div>
 
-          {/* Crop Selection */}
-          <div 
-            style={styles.card} 
-            className="card-responsive"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 25px 70px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5)';
-            }}
-          >
+          {/* ── OR Divider ── */}
+          <div style={styles.orDivider}>
+            <div style={styles.orDividerLine}></div>
+            <span style={styles.orDividerText}>OR</span>
+            <div style={styles.orDividerLine}></div>
+          </div>
+
+          {/* ── Video Upload Card ── */}
+          <div style={styles.card} className="card-responsive" onMouseEnter={cardHoverOn} onMouseLeave={cardHoverOff}>
             <div style={styles.cardHeader}>
-              <div style={styles.cardIcon}>
-                <Leaf size={20} />
-              </div>
+              <div style={styles.cardIcon}><Video size={20} /></div>
+              <h2 style={styles.cardTitle}>Upload Crop Video</h2>
+            </div>
+
+            <input
+              type="file"
+              id="crop-video"
+              accept="video/mp4,video/avi,video/mov"
+              onChange={handleVideoUpload}
+              style={styles.fileInput}
+            />
+            <label
+              htmlFor="crop-video"
+              style={styles.uploadLabel}
+              onMouseEnter={labelHoverOn}
+              onMouseLeave={labelHoverOff}
+            >
+              {!videoPreview ? (
+                <>
+                  <Video size={56} style={styles.uploadIcon} />
+                  <p style={styles.uploadText}>Click to upload video</p>
+                  <p style={styles.uploadSubtext}>MP4, AVI or MOV • Max 20MB</p>
+                </>
+              ) : (
+                <div style={styles.imagePreview}>
+                  <div style={styles.previewImageWrapper}>
+                    <video
+                      src={videoPreview}
+                      style={styles.previewVideo}
+                      controls
+                      onClick={(e) => e.preventDefault()}
+                    />
+                  </div>
+                  <span style={styles.videoInfoBadge}>
+                    <Video size={12} />
+                    {selectedVideo?.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSelectedVideo(null);
+                      setVideoPreview(null);
+                      setUploadMode(null); // ✅ reset mode
+                      setResult(null);
+                    }}
+                    style={styles.changeImageBtn}
+                  >
+                    Change Video
+                  </button>
+                </div>
+              )}
+            </label>
+          </div>
+
+          {/* ── Crop Selection ── */}
+          <div style={styles.card} className="card-responsive" onMouseEnter={cardHoverOn} onMouseLeave={cardHoverOff}>
+            <div style={styles.cardHeader}>
+              <div style={styles.cardIcon}><Leaf size={20} /></div>
               <h2 style={styles.cardTitle}>Select Crop Type</h2>
             </div>
-            <select 
-              value={selectedCrop} 
+            <select
+              value={selectedCrop}
               onChange={handleCropChange}
               style={styles.select}
               onFocus={(e) => {
                 e.currentTarget.style.borderColor = '#4caf50';
-                e.currentTarget.style.background = 'white';
                 e.currentTarget.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
               }}
               onBlur={(e) => {
                 e.currentTarget.style.borderColor = '#a5d6a7';
-                e.currentTarget.style.background = 'linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%)';
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
@@ -644,22 +730,20 @@ const handleScanCrop = async () => {
             </select>
           </div>
 
-          {/* Scan Button */}
+          {/* ── Scan Button ── */}
           <button
             onClick={handleScanCrop}
             disabled={isButtonDisabled}
-            style={isButtonDisabled ? {...styles.scanButton, ...styles.scanButtonDisabled} : styles.scanButton}
+            style={isButtonDisabled ? { ...styles.scanButton, ...styles.scanButtonDisabled } : styles.scanButton}
             onMouseEnter={(e) => {
               if (!isButtonDisabled) {
                 e.currentTarget.style.background = 'linear-gradient(135deg, #388e3c 0%, #1b5e20 100%)';
-                e.currentTarget.style.boxShadow = '0 15px 40px rgba(76, 175, 80, 0.5)';
                 e.currentTarget.style.transform = 'translateY(-3px)';
               }
             }}
             onMouseLeave={(e) => {
               if (!isButtonDisabled) {
                 e.currentTarget.style.background = 'linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(76, 175, 80, 0.4)';
                 e.currentTarget.style.transform = 'translateY(0)';
               }
             }}
@@ -678,58 +762,34 @@ const handleScanCrop = async () => {
           </button>
         </div>
 
-        {/* Result Section */}
+        {/* ── Result Section ── */}
         {result && (
           <div style={styles.resultSection}>
-            <div 
-              style={styles.card} 
-              className="card-responsive"
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 25px 70px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5)';
-              }}
-            >
+            <div style={styles.card} className="card-responsive" onMouseEnter={cardHoverOn} onMouseLeave={cardHoverOff}>
               <div style={styles.resultHeader} className="result-header-responsive">
                 <div style={styles.cardHeader}>
-                  <div style={styles.cardIcon}>
-                    <Eye size={20} />
-                  </div>
+                  <div style={styles.cardIcon}><Eye size={20} /></div>
                   <h2 style={styles.cardTitle}>Analysis Result</h2>
                 </div>
-                <div style={getUrgencyStyle(result.urgencyLevel)}>
-                  {result.urgencyLevel === 'high' && <AlertCircle size={16} />}
-                  {result.urgencyLevel === 'medium' && <Info size={16} />}
-                  {result.urgencyLevel === 'low' && <CheckCircle size={16} />}
+                <div style={{ ...styles.urgencyBadge, ...styles.urgencyMedium }}>
+                  <Info size={16} />
                   <span>{result.urgencyLevel}</span>
                 </div>
               </div>
 
               <div style={styles.resultContent}>
                 <div style={styles.resultItem}>
-                  <h3 style={styles.resultItemTitle}>
-                    <Leaf size={16} />
-                    Crop Name
-                  </h3>
+                  <h3 style={styles.resultItemTitle}><Leaf size={16} />Crop Name</h3>
                   <p style={styles.resultItemText}>{result.cropName}</p>
                 </div>
 
                 <div style={styles.resultItem}>
-                  <h3 style={styles.resultItemTitle}>
-                    <AlertCircle size={16} />
-                    Possible Issue
-                  </h3>
+                  <h3 style={styles.resultItemTitle}><AlertCircle size={16} />Possible Issue</h3>
                   <p style={styles.resultItemText}>{result.possibleIssue}</p>
                 </div>
 
                 <div style={styles.resultItem}>
-                  <h3 style={styles.resultItemTitle}>
-                    <TrendingUp size={16} />
-                    Immediate Steps
-                  </h3>
+                  <h3 style={styles.resultItemTitle}><TrendingUp size={16} />Immediate Steps</h3>
                   <ul style={styles.stepsList}>
                     {result.immediateSteps.map((step, index) => (
                       <li key={index} style={styles.stepsListItem}>
@@ -740,8 +800,7 @@ const handleScanCrop = async () => {
                           width: '8px',
                           height: '8px',
                           background: '#4caf50',
-                          borderRadius: '50%',
-                          boxShadow: '0 0 8px rgba(76, 175, 80, 0.6)'
+                          borderRadius: '50%'
                         }}></span>
                         {step}
                       </li>
@@ -752,8 +811,8 @@ const handleScanCrop = async () => {
                 <div style={styles.disclaimer}>
                   <Info size={20} style={styles.disclaimerIcon} />
                   <p style={styles.disclaimerText}>
-                    <strong style={styles.disclaimerStrong}>Disclaimer:</strong> This prediction is based on AI analysis and should be used as a guide only. 
-                    For accurate diagnosis, please consult with an agricultural expert or local extension officer.
+                    <strong style={styles.disclaimerStrong}>Disclaimer:</strong> This prediction is based on AI analysis
+                    and should be used as a guide only. For accurate diagnosis, please consult with an agricultural expert.
                   </p>
                 </div>
               </div>
