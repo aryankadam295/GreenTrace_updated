@@ -22,6 +22,7 @@ const forwardPrediction = async (req, res, fieldName, endpointPath) => {
   } catch (error) {
     const status = error.response?.status || 500;
     const message = error.response?.data?.message || error.message || "Prediction failed";
+    console.error("Crop prediction error:", message);
     return res.status(status).json({ message });
   } finally {
     if (req.file?.path && fs.existsSync(req.file.path)) {
