@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
@@ -84,6 +85,33 @@ const Navbar = () => {
                     Analytics
                   </Link>
                 </>
+              )}
+
+
+              {user?.role === 'farmer' && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/farmer-weather')}
+                  title="Weather Forecast"
+                  aria-label="Open weather forecast"
+                  className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-green-100 transition"
+                >
+                  <svg
+                    className="w-5 h-5 text-green-700"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M3 15a4 4 0 014-4h1a6 6 0 1111.96 1.5A3.5 3.5 0 0119.5 19H7a4 4 0 01-4-4zm13-8h.01M12 5h.01M8 7h.01"
+                    />
+                  </svg>
+                  <span className="text-sm font-medium text-green-800">Weather Forecast</span>
+                </button>
               )}
 
               <span className="text-green-900 font-medium">
@@ -208,6 +236,13 @@ const Navbar = () => {
                     Analytics
                   </Link>
                 </>
+              )}
+
+
+              {user?.role === 'farmer' && (
+                <Link to="/farmer-weather" className="block hover:text-green-700 transition">
+                  Weather Forecast
+                </Link>
               )}
 
               <span className="block text-green-900 font-medium mb-2">
