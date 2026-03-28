@@ -12,7 +12,8 @@ const storage = multer.diskStorage({
   },
 });
 
-// file filter (images + videos for crop disease prediction)
+
+
 const fileFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image") || file.mimetype.startsWith("video")) {
     cb(null, true);

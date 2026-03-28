@@ -29,15 +29,11 @@ const CropDiseasePrediction = () => {
     setResult(null);
 
     if (file) {
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-      if (!validTypes.includes(file.type)) {
-        setError('Please upload a valid image file (JPG, JPEG, or PNG)');
-        return;
-      }
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
 
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        setError('File size must be less than 5MB');
+      if (!isImage && !isVideo) {
+        setError('Please upload a valid image or video file');
         return;
       }
 
@@ -373,24 +369,6 @@ const CropDiseasePrediction = () => {
       fontSize: '0.9rem',
       marginTop: '1rem',
       fontWeight: '500'
-    },
-    select: {
-      width: '100%',
-      padding: '1rem 1.25rem',
-      fontSize: '1rem',
-      color: '#1b5e20',
-      background: 'linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%)',
-      border: '2px solid #a5d6a7',
-      borderRadius: '12px',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      fontWeight: '500',
-      appearance: 'none',
-      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234caf50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'right 1rem center',
-      backgroundSize: '20px',
-      paddingRight: '3rem'
     },
     scanButton: {
       width: '100%',
@@ -787,6 +765,16 @@ const CropDiseasePrediction = () => {
                   <h3 style={styles.resultItemTitle}><AlertCircle size={16} />Possible Issue</h3>
                   <p style={styles.resultItemText}>{result.possibleIssue}</p>
                 </div>
+
+                {result.description && (
+                  <div style={styles.resultItem}>
+                    <h3 style={styles.resultItemTitle}>
+                      <Info size={16} />
+                      Disease Details
+                    </h3>
+                    <p style={styles.resultItemText}>{result.description}</p>
+                  </div>
+                )}
 
                 <div style={styles.resultItem}>
                   <h3 style={styles.resultItemTitle}><TrendingUp size={16} />Immediate Steps</h3>
