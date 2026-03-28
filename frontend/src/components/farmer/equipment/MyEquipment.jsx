@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { equipmentAPI } from '../../../utils/api';
 import EquipmentUpload from './EquipmentUpload';
+import { getMediaUrl } from '../../../utils/media';
 
 const MyEquipment = ({ onRefresh }) => {
   const [equipment, setEquipment] = useState([]);
@@ -151,7 +152,7 @@ const MyEquipment = ({ onRefresh }) => {
                 <div className="w-full md:w-32 h-32 flex-shrink-0">
                   <img
                     src={item.images?.[0]
-                      ? `http://localhost:5000/uploads/equipment/${item.images[0]}`
+                      ? getMediaUrl(item.images[0], 'equipment')
                       : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23e5e7eb" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="40">🚜</text></svg>'
                     }
                     alt={item.name}

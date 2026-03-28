@@ -1,0 +1,138 @@
+.myland-container {
+    padding: 3rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    font-family: 'Inter', sans-serif;
+    background: #fdfdfd;
+    min-height: calc(100vh - 80px); /* minus navbar height approx */
+}
+
+.myland-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 1rem;
+}
+
+.myland-header h2 {
+    color: #2c3e50;
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.add-land-btn {
+    background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 15px rgba(9, 132, 227, 0.2);
+}
+
+.add-land-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(9, 132, 227, 0.4);
+}
+
+.myland-loading {
+    text-align: center;
+    font-size: 1.5rem;
+    color: #7f8c8d;
+    margin-top: 5rem;
+}
+
+.no-listings {
+    text-align: center;
+    background: #ecf0f1;
+    padding: 3rem;
+    border-radius: 12px;
+    color: #7f8c8d;
+    font-size: 1.2rem;
+}
+
+.myland-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.myland-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #f1f2f6;
+}
+
+.myland-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.land-title {
+    font-size: 1.25rem;
+    color: #2d3436;
+    font-weight: 600;
+    margin: 0;
+    padding-right: 1rem;
+}
+
+.land-status {
+    padding: 0.3rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.status-pending { background: #ffeaa7; color: #d63031; }
+.status-verified { background: #55efc4; color: #00b894; }
+.status-rejected { background: #ff7675; color: #c0392b; }
+
+.card-body p {
+    margin: 0.5rem 0;
+    color: #636e72;
+    font-size: 0.95rem;
+}
+
+.card-body strong {
+    color: #2d3436;
+}
+
+.description-preview {
+    font-style: italic;
+    color: #b2bec3 !important;
+    margin-top: 1rem !important;
+}
+
+.card-footer {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f2f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #bdc3c7;
+}
+
+.docs-info {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #74b9ff;
+}

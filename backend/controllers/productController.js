@@ -2,8 +2,7 @@ import mongoose from "mongoose";
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import Inquiry from "../models/Inquiry.js";
-import fs from 'fs';
-import path from 'path';
+import { deleteStoredFile, getUploadedFileUrl } from '../utils/storage.js';
 
 // ---------- CREATE PRODUCT ----------
 export const createProduct = async (req, res) => {
@@ -29,7 +28,7 @@ export const createProduct = async (req, res) => {
     // Handle image uploads
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
-      imageUrls = req.files.map(file => file.filename);
+      imageUrls = req.files.map(file => getUploadedFileUrl(file));
     }
 
     // Create new product
@@ -60,12 +59,7 @@ export const createProduct = async (req, res) => {
   } catch (error) {
     // Clean up uploaded files if product creation fails
     if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        const filePath = path.join('uploads', 'products', file.filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
+      await Promise.all(req.files.map((file) => deleteStoredFile(getUploadedFileUrl(file), 'products')));
     }
     res.status(500).json({ message: error.message });
   }
@@ -135,7 +129,7 @@ export const updateProduct = async (req, res) => {
     // Handle new image uploads
     let imageUrls = product.images || []; // Keep existing images
     if (req.files && req.files.length > 0) {
-      const newImageUrls = req.files.map(file => file.filename);
+      const newImageUrls = req.files.map(file => getUploadedFileUrl(file));
       imageUrls = [...imageUrls, ...newImageUrls]; // Append new images
     }
 
@@ -159,12 +153,7 @@ export const updateProduct = async (req, res) => {
   } catch (error) {
     // Clean up uploaded files if update fails
     if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        const filePath = path.join('uploads', 'products', file.filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
+      await Promise.all(req.files.map((file) => deleteStoredFile(getUploadedFileUrl(file), 'products')));
     }
     res.status(500).json({ message: error.message });
   }
@@ -186,13 +175,7 @@ export const deleteProduct = async (req, res) => {
 
     // Delete associated image files
     if (product.images && product.images.length > 0) {
-      product.images.forEach(imageUrl => {
-        const filename = path.basename(imageUrl);
-        const filePath = path.join('uploads', 'products', filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
+      await Promise.all(product.images.map((imageUrl) => deleteStoredFile(imageUrl, 'products')));
     }
 
     await Product.findByIdAndDelete(req.params.id);

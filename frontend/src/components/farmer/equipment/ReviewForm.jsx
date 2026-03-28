@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { equipmentAPI } from '../../../utils/api';
+import { getMediaUrl } from '../../../utils/media';
 
 const ReviewForm = ({ booking, onSuccess, onCancel }) => {
   const [rating, setRating] = useState(0);
@@ -113,7 +114,7 @@ const ReviewForm = ({ booking, onSuccess, onCancel }) => {
           <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200">
             <img
               src={booking.equipmentId?.images?.[0]
-                ? `http://localhost:5000/uploads/equipment/${booking.equipmentId.images[0]}`
+                ? getMediaUrl(booking.equipmentId.images[0], 'equipment')
                 : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23e5e7eb" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="30">🚜</text></svg>'
               }
               alt={booking.equipmentId?.name}

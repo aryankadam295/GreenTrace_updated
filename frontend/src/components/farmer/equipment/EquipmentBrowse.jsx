@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { equipmentAPI } from '../../../utils/api';
 import EquipmentDetail from './EquipmentDetail';
+import { getMediaUrl } from '../../../utils/media';
 
 const CATEGORIES = [
   'All',
@@ -264,7 +265,7 @@ const EquipmentBrowse = () => {
                 <div className="relative h-48">
                   <img
                     src={item.images?.[0] 
-                      ? `http://localhost:5000/uploads/equipment/${item.images[0]}`
+                      ? getMediaUrl(item.images[0], 'equipment')
                       : '/placeholder-equipment.png'
                     }
                     alt={item.name}

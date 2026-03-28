@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { equipmentAPI } from '../../../utils/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import ReviewForm from './ReviewForm';
+import { getMediaUrl } from '../../../utils/media';
 
 const EquipmentDetail = ({ equipmentId, onBack }) => {
   const { user } = useAuth();
@@ -176,7 +177,7 @@ const EquipmentDetail = ({ equipmentId, onBack }) => {
           <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-4">
             <img
               src={equipment.images?.[activeImage]
-                ? `http://localhost:5000/uploads/equipment/${equipment.images[activeImage]}`
+                ? getMediaUrl(equipment.images[activeImage], 'equipment')
                 : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23e5e7eb" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="40">🚜</text></svg>'
               }
               alt={equipment.name}
@@ -196,7 +197,7 @@ const EquipmentDetail = ({ equipmentId, onBack }) => {
                   }`}
                 >
                   <img
-                    src={`http://localhost:5000/uploads/equipment/${img}`}
+                    src={getMediaUrl(img, 'equipment')}
                     alt={`${equipment.name} ${index + 1}`}
                     className="w-full h-full object-cover"
                   />

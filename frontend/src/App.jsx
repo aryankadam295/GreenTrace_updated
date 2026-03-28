@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -17,6 +17,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AccessDenied from './components/AccessDenied';
 import WeatherPage from './components/farmer/WeatherPage';
 
+// Land Verification Components
+import LandVerification from './components/admin/LandVerification';
+
 
 function App() {
   return (
@@ -31,6 +34,22 @@ function App() {
           <Route path="/for-merchants" element={<ForMerchants />} />
           <Route path="/for-admin" element={<ForAdmin />} />
           <Route path="/about" element={<AboutUs />} />
+          <Route
+            path="/land-feed"
+            element={
+              <ProtectedRoute allowedRoles={['farmer']}>
+                <Navigate to="/farmer-dashboard?section=landRentals" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/land-rentals"
+            element={
+              <ProtectedRoute allowedRoles={['farmer']}>
+                <Navigate to="/farmer-dashboard?section=landRentals" replace />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected Farmer Routes */}
           <Route
@@ -38,6 +57,22 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['farmer']}>
                 <FarmerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/add-land"
+            element={
+              <ProtectedRoute allowedRoles={['farmer']}>
+                <Navigate to="/farmer-dashboard?section=landRentals" replace />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-lands"
+            element={
+              <ProtectedRoute allowedRoles={['farmer']}>
+                <Navigate to="/farmer-dashboard?section=landRentals" replace />
               </ProtectedRoute>
             }
           />
@@ -68,6 +103,14 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['admin']}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/verify-land"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <LandVerification />
               </ProtectedRoute>
             }
           />

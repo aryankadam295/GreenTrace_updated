@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { equipmentAPI } from '../../../utils/api';
 import { useAuth } from '../../../contexts/AuthContext';
+import { getMediaUrl } from '../../../utils/media';
 
 const EquipmentChat = () => {
   const { user } = useAuth();
@@ -154,7 +155,7 @@ const EquipmentChat = () => {
                   <div className="w-12 h-12 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                     <img
                       src={chat.equipment?.images?.[0]
-                        ? `http://localhost:5000/uploads/equipment/${chat.equipment.images[0]}`
+                        ? getMediaUrl(chat.equipment.images[0], 'equipment')
                         : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23e5e7eb" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="30">🚜</text></svg>'
                       }
                       alt={chat.equipment?.name}
@@ -224,7 +225,7 @@ const EquipmentChat = () => {
               <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100">
                 <img
                   src={selectedChat.equipment?.images?.[0]
-                    ? `http://localhost:5000/uploads/equipment/${selectedChat.equipment.images[0]}`
+                    ? getMediaUrl(selectedChat.equipment.images[0], 'equipment')
                     : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23e5e7eb" width="100" height="100"/><text x="50" y="50" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="30">🚜</text></svg>'
                   }
                   alt={selectedChat.equipment?.name}
