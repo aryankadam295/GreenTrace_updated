@@ -83,6 +83,9 @@ const Navbar = () => {
                   <Link to="/admin-dashboard" className="hover:text-green-700 transition">
                     Analytics
                   </Link>
+                  <Link to="/admin/verify-land" className="hover:text-green-700 transition font-medium">
+                    Verify Lands
+                  </Link>
                 </>
               )}
 
@@ -206,6 +209,9 @@ const Navbar = () => {
                   </Link>
                   <Link to="/admin-dashboard" className="block hover:text-green-700 transition">
                     Analytics
+                  </Link>
+                  <Link to="/admin/verify-land" className="block hover:text-green-700 transition font-medium">
+                    Verify Lands
                   </Link>
                 </>
               )}

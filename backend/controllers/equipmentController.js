@@ -2,8 +2,7 @@ import mongoose from "mongoose";
 import Equipment from "../models/Equipment.js";
 import User from "../models/User.js";
 import EquipmentBooking from "../models/EquipmentBooking.js";
-import fs from 'fs';
-import path from 'path';
+import { deleteStoredFile, getUploadedFileUrl } from '../utils/storage.js';
 
 // ---------- CREATE EQUIPMENT ----------
 export const createEquipment = async (req, res) => {
@@ -30,7 +29,7 @@ export const createEquipment = async (req, res) => {
     // Handle image uploads
     let imageUrls = [];
     if (req.files && req.files.length > 0) {
-      imageUrls = req.files.map(file => file.filename);
+      imageUrls = req.files.map(file => getUploadedFileUrl(file));
     }
 
     // Create new equipment
@@ -65,12 +64,7 @@ export const createEquipment = async (req, res) => {
   } catch (error) {
     // Clean up uploaded files if creation fails
     if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        const filePath = path.join('uploads', 'equipment', file.filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
+      await Promise.all(req.files.map((file) => deleteStoredFile(getUploadedFileUrl(file), 'equipment')));
     }
     res.status(500).json({ message: error.message });
   }
@@ -216,7 +210,7 @@ export const updateEquipment = async (req, res) => {
     // Handle new image uploads
     let imageUrls = equipment.images || [];
     if (req.files && req.files.length > 0) {
-      const newImageUrls = req.files.map(file => file.filename);
+      const newImageUrls = req.files.map(file => getUploadedFileUrl(file));
       imageUrls = [...imageUrls, ...newImageUrls];
     }
 
@@ -249,12 +243,7 @@ export const updateEquipment = async (req, res) => {
     });
   } catch (error) {
     if (req.files && req.files.length > 0) {
-      req.files.forEach(file => {
-        const filePath = path.join('uploads', 'equipment', file.filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
+      await Promise.all(req.files.map((file) => deleteStoredFile(getUploadedFileUrl(file), 'equipment')));
     }
     res.status(500).json({ message: error.message });
   }
@@ -287,13 +276,7 @@ export const deleteEquipment = async (req, res) => {
 
     // Delete associated image files
     if (equipment.images && equipment.images.length > 0) {
-      equipment.images.forEach(imageUrl => {
-        const filename = path.basename(imageUrl);
-        const filePath = path.join('uploads', 'equipment', filename);
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-        }
-      });
+      await Promise.all(equipment.images.map((imageUrl) => deleteStoredFile(imageUrl, 'equipment')));
     }
 
     await Equipment.findByIdAndDelete(req.params.id);

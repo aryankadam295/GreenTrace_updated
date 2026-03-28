@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import ProductUpload from './farmer/ProductUpload';
 import ProductList from './farmer/ProductList';
@@ -9,10 +9,12 @@ import Analytics from './farmer/Analytics';
 import Chatbox from './farmer/Chatbox';
 import EquipmentHub from './farmer/equipment/EquipmentHub';
 import CropDiseasePrediction from './farmer/CropDiseasePrediction';
+import LandHub from './Land/LandHub';
 
 const FarmerDashboard = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState('overview');
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -36,6 +38,13 @@ const FarmerDashboard = () => {
     fetchAnalytics();
   }, [isAuthenticated, user, navigate]);
 
+  useEffect(() => {
+    const section = new URLSearchParams(location.search).get('section');
+    if (section) {
+      setActiveTab(section);
+    }
+  }, [location.search]);
+
   const fetchAnalytics = async () => {
     try {
       const response = await api.get('/products/analytics');
@@ -55,6 +64,7 @@ const FarmerDashboard = () => {
     { id: 'chat', label: 'Chat', icon: '💭' },
     { id: 'analytics', label: 'Reports', icon: '📈' },
     { id: 'equipment', label: 'Equipment Hub', icon: '🚜' },
+    { id: 'landRentals', label: 'Land Rentals', icon: '🏞️' },
     { id: 'CropDiseasePrediction', label: 'Crop Disease Prediction', icon: '🔬' }
   ];
 
@@ -74,6 +84,8 @@ const FarmerDashboard = () => {
         return <Analytics analytics={analytics} />;
       case 'equipment':
         return <EquipmentHub />;
+      case 'landRentals':
+        return <LandHub embeddedInDashboard />;
       case 'CropDiseasePrediction':
         return <CropDiseasePrediction />;
       default:

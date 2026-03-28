@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
+import { getMediaUrl } from '../../utils/media';
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -130,7 +131,7 @@ const ProductList = () => {
                 <div className="h-48 bg-gray-200 rounded-t-lg overflow-hidden">
                   {product.images && product.images.length > 0 ? (
                     <img
-                      src={`http://localhost:5000/uploads/products/${product.images[0]}`}
+                      src={getMediaUrl(product.images[0], 'products')}
                       alt={product.productName}
                       className="w-full h-full object-cover"
                       onError={(e) => {

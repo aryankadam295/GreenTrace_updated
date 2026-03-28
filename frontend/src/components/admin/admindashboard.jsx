@@ -16,6 +16,7 @@ import { Users, TrendingUp, DollarSign, Activity, UserCheck, Briefcase } from 'l
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
+import LandVerification from './LandVerification';
 
 const AdminDashboard = () => {
   const { user, isAuthenticated } = useAuth();
@@ -212,6 +213,12 @@ const AdminDashboard = () => {
             icon={Activity} 
             active={activeTab === 'activities'} 
             onClick={() => setActiveTab('activities')} 
+          />
+          <TabButton
+            label="Land Listings"
+            icon={UserCheck}
+            active={activeTab === 'lands'}
+            onClick={() => setActiveTab('lands')}
           />
         </div>
 
@@ -545,6 +552,12 @@ const AdminDashboard = () => {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'lands' && (
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            <LandVerification embedded />
           </div>
         )}
       </div>

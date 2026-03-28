@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
+import multer from "multer";
 
 import connectDB from "./config/db.js";
 
@@ -14,6 +15,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import equipmentRoutes from "./routes/equipmentRoutes.js";
 import cropRoutes from "./routes/cropRoutes.js";
+import landRoutes from "./routes/landRoutes.js";
 
 dotenv.config();
 
@@ -44,9 +46,31 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/equipment", equipmentRoutes);
 app.use("/api", cropRoutes);
+app.use("/api/land", landRoutes);
 
 // Static files
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+
+// Error handler
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        message: "One of the uploaded files is too large. Maximum allowed size is 25MB per file."
+      });
+    }
+
+    return res.status(400).json({ message: err.message });
+  }
+
+  if (err) {
+    return res.status(500).json({
+      message: err.message || "Internal server error"
+    });
+  }
+
+  next();
+});
 
 // Database connection
 connectDB();

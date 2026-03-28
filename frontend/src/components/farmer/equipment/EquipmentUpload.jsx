@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { equipmentAPI } from '../../../utils/api';
+import { getMediaUrl } from '../../../utils/media';
 
 const CATEGORIES = [
   'Tractor',
@@ -355,7 +356,7 @@ const EquipmentUpload = ({ onSuccess, editData = null }) => {
               {previews.map((preview, index) => (
                 <div key={index} className="relative group">
                   <img
-                    src={preview.startsWith('data:') ? preview : `http://localhost:5000/uploads/equipment/${preview}`}
+                    src={getMediaUrl(preview, 'equipment')}
                     alt={`Preview ${index + 1}`}
                     className="w-full h-24 object-cover rounded-lg"
                   />
