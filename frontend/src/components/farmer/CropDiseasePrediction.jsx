@@ -2,94 +2,132 @@ import React, { useState } from 'react';
 import { Upload, Loader, AlertCircle, CheckCircle, Info, Leaf, Activity, Eye, TrendingUp } from 'lucide-react';
 
 const CropDiseasePrediction = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [selectedCrop, setSelectedCrop] = useState('');
+  const [selectedVideo, setSelectedVideo] = useState(null);
+  const [videoPreview, setVideoPreview] = useState(null);
+  const [uploadMode, setUploadMode] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
-
-  const cropOptions = [
-    { value: '', label: 'Select a crop', icon: '🌾' },
-    { value: 'tomato', label: 'Tomato', icon: '🍅' },
-    { value: 'potato', label: 'Potato', icon: '🥔' },
-    { value: 'rice', label: 'Rice', icon: '🌾' },
-    { value: 'wheat', label: 'Wheat', icon: '🌾' },
-    { value: 'cotton', label: 'Cotton', icon: '☁️' }
-  ];
-
-  const handleImageUpload = (e) => {
+  const handleFileUpload = (e) => {
     const file = e.target.files[0];
     setError('');
     setResult(null);
 
     if (file) {
-      const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-      if (!validTypes.includes(file.type)) {
-        setError('Please upload a valid image file (JPG, JPEG, or PNG)');
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+
+      if (!isImage && !isVideo) {
+        setError('Please upload a valid image or video file');
         return;
       }
 
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        setError('File size must be less than 5MB');
-        return;
-      }
+      if (isImage) {
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!validTypes.includes(file.type)) {
+          setError('Please upload a valid image file (JPG, JPEG, or PNG)');
+          return;
+        }
 
-      setSelectedImage(file);
-      
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+          setError('Image size must be less than 5MB');
+          return;
+        }
+
+        setSelectedVideo(null);
+        setVideoPreview(null);
+        setSelectedImage(file);
+        setUploadMode('image');
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreview(reader.result);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const validTypes = ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime', 'video/x-msvideo'];
+        if (!validTypes.includes(file.type)) {
+          setError('Please upload a valid video file (MP4, AVI, MOV)');
+          return;
+        }
+
+        const maxSize = 20 * 1024 * 1024;
+        if (file.size > maxSize) {
+          setError('Video size must be less than 20MB');
+          return;
+        }
+
+        setSelectedImage(null);
+        setImagePreview(null);
+        setSelectedVideo(file);
+        setVideoPreview(URL.createObjectURL(file));
+        setUploadMode('video');
+      }
     }
   };
-
-  const handleCropChange = (e) => {
-    setSelectedCrop(e.target.value);
-    setError('');
-    setResult(null);
-  };
-
 const handleScanCrop = async () => {
   setIsLoading(true);
   setError('');
 
   try {
     const formData = new FormData();
-    formData.append('image', selectedImage);
-    formData.append('crop', selectedCrop);
+    let endpoint = '';
 
-    const response = await fetch('http://localhost:5000/api/predict-crop', {
+    if (uploadMode === 'video' && selectedVideo) {
+      formData.append('video', selectedVideo);
+      endpoint = `${API_BASE_URL}/api/predict-video`;
+    } else if (uploadMode === 'image' && selectedImage) {
+      formData.append('image', selectedImage);
+      endpoint = `${API_BASE_URL}/api/predict-crop`;
+    } else {
+      throw new Error('Please upload an image or video first.');
+    }
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       body: formData
     });
 
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Server error: ${response.status} - ${text}`);
+    }
+
     const data = await response.json();
 
-    // convert backend response into your UI structure
+    const parsedSteps = (data.possible_steps || '')
+      .split(/\n|;\s+/)
+      .map((step) => step.trim())
+      .filter(Boolean);
+
     const formattedResult = {
-      cropName: selectedCrop.toUpperCase(),
-      possibleIssue: data.disease,
+      cropName: ((data.display_name || data.disease || 'Unknown').split(':')[0] || 'Unknown').trim(),
+      possibleIssue: data.display_name || data.disease || 'Unknown',
+      description: data.description || '',
       urgencyLevel: "medium",
-      immediateSteps: [
+      immediateSteps: parsedSteps.length > 0 ? parsedSteps : [
         "Remove infected leaves from the plant",
         "Avoid overwatering the crop",
         "Apply recommended fungicide or pesticide",
         "Monitor nearby plants for similar symptoms"
-      ]
+      ],
+      supplementName: data.supplement_name || '',
+      supplementBuyLink: data.supplement_buy_link || ''
     };
 
     setResult(formattedResult);
 
   } catch (err) {
-    setError('Failed to analyze image. Please try again.');
+    setError(err.message || 'Failed to analyze file. Please try again.');
   } finally {
     setIsLoading(false);
   }
 };
-  const isButtonDisabled = !selectedImage || !selectedCrop || isLoading;
+  const isButtonDisabled = !uploadMode || isLoading;
 
   const styles = {
     container: {
@@ -244,6 +282,12 @@ const handleScanCrop = async () => {
       objectFit: 'contain',
       display: 'block'
     },
+    previewVideo: {
+      maxWidth: '100%',
+      maxHeight: '300px',
+      borderRadius: '12px',
+      display: 'block'
+    },
     changeImageBtn: {
       padding: '0.75rem 2rem',
       background: 'linear-gradient(135deg, #4caf50 0%, #388e3c 100%)',
@@ -269,24 +313,6 @@ const handleScanCrop = async () => {
       marginTop: '1rem',
       fontWeight: '500',
       animation: 'shake 0.5s ease'
-    },
-    select: {
-      width: '100%',
-      padding: '1rem 1.25rem',
-      fontSize: '1rem',
-      color: '#1b5e20',
-      background: 'linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%)',
-      border: '2px solid #a5d6a7',
-      borderRadius: '12px',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      fontWeight: '500',
-      appearance: 'none',
-      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234caf50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-      backgroundRepeat: 'no-repeat',
-      backgroundPosition: 'right 1rem center',
-      backgroundSize: '20px',
-      paddingRight: '3rem'
     },
     scanButton: {
       width: '100%',
@@ -509,7 +535,7 @@ const handleScanCrop = async () => {
           <span>AI-Powered Diagnosis</span>
         </div>
         <h1 style={styles.title}>🌱 Crop Disease Prediction</h1>
-        <p style={styles.subtitle}>Upload an image of your crop and let AI detect potential diseases instantly</p>
+        <p style={styles.subtitle}>Upload an image or video of your crop and let AI detect potential diseases instantly</p>
       </div>
 
       <div style={styles.contentWrapper} className="content-wrapper-responsive">
@@ -531,15 +557,15 @@ const handleScanCrop = async () => {
               <div style={styles.cardIcon}>
                 <Upload size={20} />
               </div>
-              <h2 style={styles.cardTitle}>Upload Crop Image</h2>
+              <h2 style={styles.cardTitle}>Upload Crop Image / Video</h2>
             </div>
             
             <div>
               <input
                 type="file"
                 id="crop-image"
-                accept=".jpg,.jpeg,.png"
-                onChange={handleImageUpload}
+                accept=".jpg,.jpeg,.png,.mp4,.avi,.mov"
+                onChange={handleFileUpload}
                 style={styles.fileInput}
               />
               <label 
@@ -556,16 +582,20 @@ const handleScanCrop = async () => {
                   e.currentTarget.style.transform = 'scale(1)';
                 }}
               >
-                {!imagePreview ? (
+                {!imagePreview && !videoPreview ? (
                   <>
                     <Upload size={56} style={styles.uploadIcon} />
-                    <p style={styles.uploadText}>Click to upload image</p>
-                    <p style={styles.uploadSubtext}>JPG, JPEG or PNG • Max 5MB</p>
+                    <p style={styles.uploadText}>Click to upload image or video</p>
+                    <p style={styles.uploadSubtext}>Images max 5MB | Videos max 20MB</p>
                   </>
                 ) : (
                   <div style={styles.imagePreview}>
                     <div style={styles.previewImageWrapper}>
-                      <img src={imagePreview} alt="Crop preview" style={styles.previewImage} />
+                      {uploadMode === 'video' ? (
+                        <video src={videoPreview} controls style={styles.previewVideo} />
+                      ) : (
+                        <img src={imagePreview} alt="Crop preview" style={styles.previewImage} />
+                      )}
                     </div>
                     <button 
                       type="button"
@@ -573,6 +603,9 @@ const handleScanCrop = async () => {
                         e.preventDefault();
                         setSelectedImage(null);
                         setImagePreview(null);
+                        setSelectedVideo(null);
+                        setVideoPreview(null);
+                        setUploadMode(null);
                         setResult(null);
                       }}
                       style={styles.changeImageBtn}
@@ -587,7 +620,7 @@ const handleScanCrop = async () => {
                         e.currentTarget.style.boxShadow = '0 4px 15px rgba(76, 175, 80, 0.3)';
                       }}
                     >
-                      Change Image
+                      Change File
                     </button>
                   </div>
                 )}
@@ -600,48 +633,6 @@ const handleScanCrop = async () => {
                 <span>{error}</span>
               </div>
             )}
-          </div>
-
-          {/* Crop Selection */}
-          <div 
-            style={styles.card} 
-            className="card-responsive"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-4px)';
-              e.currentTarget.style.boxShadow = '0 25px 70px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.5)';
-            }}
-          >
-            <div style={styles.cardHeader}>
-              <div style={styles.cardIcon}>
-                <Leaf size={20} />
-              </div>
-              <h2 style={styles.cardTitle}>Select Crop Type</h2>
-            </div>
-            <select 
-              value={selectedCrop} 
-              onChange={handleCropChange}
-              style={styles.select}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#4caf50';
-                e.currentTarget.style.background = 'white';
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#a5d6a7';
-                e.currentTarget.style.background = 'linear-gradient(135deg, #f1f8f4 0%, #e8f5e9 100%)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              {cropOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.icon} {option.label}
-                </option>
-              ))}
-            </select>
           </div>
 
           {/* Scan Button */}
@@ -725,6 +716,16 @@ const handleScanCrop = async () => {
                   <p style={styles.resultItemText}>{result.possibleIssue}</p>
                 </div>
 
+                {result.description && (
+                  <div style={styles.resultItem}>
+                    <h3 style={styles.resultItemTitle}>
+                      <Info size={16} />
+                      Disease Details
+                    </h3>
+                    <p style={styles.resultItemText}>{result.description}</p>
+                  </div>
+                )}
+
                 <div style={styles.resultItem}>
                   <h3 style={styles.resultItemTitle}>
                     <TrendingUp size={16} />
@@ -749,13 +750,26 @@ const handleScanCrop = async () => {
                   </ul>
                 </div>
 
-                <div style={styles.disclaimer}>
-                  <Info size={20} style={styles.disclaimerIcon} />
-                  <p style={styles.disclaimerText}>
-                    <strong style={styles.disclaimerStrong}>Disclaimer:</strong> This prediction is based on AI analysis and should be used as a guide only. 
-                    For accurate diagnosis, please consult with an agricultural expert or local extension officer.
-                  </p>
-                </div>
+                {result.supplementName && (
+                  <div style={styles.resultItem}>
+                    <h3 style={styles.resultItemTitle}>
+                      <Leaf size={16} />
+                      Recommended Supplement
+                    </h3>
+                    <p style={styles.resultItemText}>{result.supplementName}</p>
+                    {result.supplementBuyLink && (
+                      <a
+                        href={result.supplementBuyLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{ ...styles.resultItemText, color: '#1b5e20', textDecoration: 'underline', display: 'inline-block', marginTop: '0.5rem' }}
+                      >
+                        Buy Link
+                      </a>
+                    )}
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
@@ -766,3 +780,6 @@ const handleScanCrop = async () => {
 };
 
 export default CropDiseasePrediction;
+
+
+
