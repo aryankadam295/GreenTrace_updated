@@ -15,6 +15,7 @@ import AdminDashboard from './components/admin/admindashboard';
 import AboutUs from './components/Aboutus';
 import ProtectedRoute from './components/ProtectedRoute';
 import AccessDenied from './components/AccessDenied';
+import WeatherPage from './components/farmer/WeatherPage';
 
 
 function App() {
@@ -37,6 +38,16 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['farmer']}>
                 <FarmerDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+
+          <Route
+            path="/farmer-weather"
+            element={
+              <ProtectedRoute allowedRoles={['farmer']}>
+                <WeatherPage />
               </ProtectedRoute>
             }
           />
