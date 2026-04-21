@@ -12,18 +12,22 @@ const userSchema = new mongoose.Schema({
   village: { type: String, required: function() { return this.role === 'farmer'; } },
   district: { type: String, required: function() { return this.role === 'farmer'; } },
   state: { type: String, required: function() { return this.role === 'farmer'; } },
-  cropsGrown: { type: String }, // Optional field, not required at signup
+  cropsGrown: { type: String },
   landSize: { type: String },
+  upiId: { type: String, default: null, trim: true }, // ✅ NEW — for receiving payments from merchants
 
   // Merchant-specific fields
   businessName: { type: String, required: function() { return this.role === 'merchant'; } },
   businessType: { type: String, required: function() { return this.role === 'merchant'; }, enum: ['Retailer', 'Wholesaler'] },
-  productsOfInterest: { type: String }, // Optional field, not required at signup
+  productsOfInterest: { type: String },
   city: { type: String, required: function() { return this.role === 'merchant'; } },
   merchantState: { type: String, required: function() { return this.role === 'merchant'; } },
 
   // Common optional fields
   isVerified: { type: Boolean, default: false },
+  isSuspended:  { type: Boolean, default: false },
+  suspendedAt:  { type: Date,    default: null },
+  suspendReason:{ type: String,  default: null },
   profileImage: { type: String },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

@@ -4,6 +4,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import multer from "multer";
+import paymentRoutes from "./routes/upiPaymentRoute.js";
 
 import connectDB from "./config/db.js";
 
@@ -47,6 +48,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/equipment", equipmentRoutes);
 app.use("/api", cropRoutes);
 app.use("/api/land", landRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // Static files
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
@@ -56,16 +58,15 @@ app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
-        message: "One of the uploaded files is too large. Maximum allowed size is 25MB per file."
+        message: "One of the uploaded files is too large. Maximum allowed size is 25MB per file.",
       });
     }
-
     return res.status(400).json({ message: err.message });
   }
 
   if (err) {
     return res.status(500).json({
-      message: err.message || "Internal server error"
+      message: err.message || "Internal server error",
     });
   }
 

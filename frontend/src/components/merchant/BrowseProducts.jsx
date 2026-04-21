@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { getMediaUrl } from '../../utils/media';
+import {
+  convertQuantity,
+  getCompatibleUnits,
+  getDefaultPurchaseUnit,
+  getUnitStep
+} from '../../utils/unitConversion';
 
 const BrowseProducts = () => {
   const [products, setProducts] = useState([]);
@@ -19,6 +25,7 @@ const BrowseProducts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [message, setMessage] = useState('');
+  const [purchaseSelections, setPurchaseSelections] = useState({});
 
   const qualityGrades = ['Premium', 'Grade A', 'Grade B', 'Standard'];
 
@@ -80,9 +87,47 @@ const BrowseProducts = () => {
     setCurrentPage(1);
   };
 
-  const addToCart = async (productId) => {
+  const getSelectionForProduct = (product) => {
+    const selected = purchaseSelections[product._id];
+    if (selected) {
+      return selected;
+    }
+
+    const defaultUnit = getDefaultPurchaseUnit(product.unit);
+    return {
+      unit: defaultUnit,
+      quantity: getUnitStep(defaultUnit)
+    };
+  };
+
+  const getAvailableQuantityInUnit = (product, unit) => {
+    return convertQuantity(product.quantity, product.unit, unit);
+  };
+
+  const addToCart = async (product) => {
+    const selection = getSelectionForProduct(product);
+    const selectedQuantity = Number(selection.quantity);
+    const selectedUnit = selection.unit;
+    const quantityInProductUnit = convertQuantity(selectedQuantity, selectedUnit, product.unit);
+    const availableInSelectedUnit = getAvailableQuantityInUnit(product, selectedUnit);
+
+    if (!Number.isFinite(selectedQuantity) || selectedQuantity <= 0) {
+      setMessage('Please enter a valid quantity greater than 0');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
+    if (selectedQuantity > availableInSelectedUnit) {
+      setMessage(`Only ${availableInSelectedUnit.toFixed(3)} ${selectedUnit} available`);
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
     try {
-      await api.post('/merchant/cart', { productId, quantity: 1 });
+      await api.post('/merchant/cart', {
+        productId: product._id,
+        quantity: quantityInProductUnit
+      });
       setMessage('Product added to cart successfully!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {
@@ -268,7 +313,18 @@ const BrowseProducts = () => {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map(product => (
+            {products.map(product => {
+              const selection = getSelectionForProduct(product);
+              const selectedUnit = selection.unit;
+              const selectedQuantity = Number(selection.quantity);
+              const quantityStep = getUnitStep(selectedUnit);
+              const unitPriceInSelectedUnit =
+                Number(product.price || 0) * convertQuantity(1, selectedUnit, product.unit);
+              const lineTotal = selectedQuantity * unitPriceInSelectedUnit;
+              const availableInSelectedUnit = getAvailableQuantityInUnit(product, selectedUnit);
+              const unitOptions = getCompatibleUnits(product.unit);
+
+              return (
               <div key={product._id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
                 {/* Product Image */}
                 <div className="h-48 bg-gray-200 rounded-t-lg overflow-hidden">
@@ -319,6 +375,10 @@ const BrowseProducts = () => {
                       <span>Location:</span>
                       <span className="font-medium text-xs">{product.farmerLocation.district}, {product.farmerLocation.state}</span>
                     </div>
+                    <div className="flex justify-between">
+                      <span>Contact:</span>
+                      <span className="font-medium">{product.farmerId?.phoneNumber || 'Not available'}</span>
+                    </div>
                   </div>
 
                   {/* Price */}
@@ -326,10 +386,77 @@ const BrowseProducts = () => {
                     ₹{product.price}/{product.unit}
                   </div>
 
+                  <div className="mb-3">
+                    {unitOptions.length > 1 && (
+                      <div className="mb-2">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Buy in unit
+                        </label>
+                        <select
+                          value={selectedUnit}
+                          onChange={(e) => {
+                            const nextUnit = e.target.value;
+                            setPurchaseSelections((prev) => {
+                              const prevSelection = prev[product._id] || {
+                                unit: getDefaultPurchaseUnit(product.unit),
+                                quantity: getUnitStep(getDefaultPurchaseUnit(product.unit))
+                              };
+                              const convertedQuantity = convertQuantity(
+                                Number(prevSelection.quantity),
+                                prevSelection.unit,
+                                nextUnit
+                              );
+
+                              return {
+                                ...prev,
+                                [product._id]: {
+                                  unit: nextUnit,
+                                  quantity: Number(convertedQuantity.toFixed(3))
+                                }
+                              };
+                            });
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                        >
+                          {unitOptions.map((unit) => (
+                            <option key={unit} value={unit}>
+                              {unit}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Quantity to buy ({selectedUnit})
+                    </label>
+                    <input
+                      type="number"
+                      min={quantityStep}
+                      step={quantityStep}
+                      value={selection.quantity}
+                      onChange={(e) =>
+                        setPurchaseSelections((prev) => ({
+                          ...prev,
+                          [product._id]: {
+                            unit: selectedUnit,
+                            quantity: e.target.value
+                          }
+                        }))
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Available: {availableInSelectedUnit.toFixed(3)} {selectedUnit}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Line total: ₹{Number(lineTotal || 0).toFixed(2)}
+                    </p>
+                  </div>
+
                   {/* Action Buttons */}
                   <div className="flex space-x-2">
                     <button
-                      onClick={() => addToCart(product._id)}
+                      onClick={() => addToCart(product)}
                       className="flex-1 bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 transition-colors"
                     >
                       Add to Cart
@@ -349,7 +476,7 @@ const BrowseProducts = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
 
           {/* Pagination */}
