@@ -12,18 +12,40 @@ const forwardPrediction = async (req, res, fieldName, endpointPath) => {
 
     const formData = new FormData();
     formData.append(fieldName, fs.createReadStream(req.file.path));
+    if (req.body?.crop) {
+      formData.append("crop", req.body.crop);
+    }
 
     const endpoint = `${ML_SERVICE_URL}${endpointPath}`;
     const response = await axios.post(endpoint, formData, {
       headers: formData.getHeaders(),
+      timeout: 120000,
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
     });
 
     return res.json(response.data);
   } catch (error) {
     const status = error.response?.status || 500;
-    const message = error.response?.data?.message || error.message || "Prediction failed";
-    console.error("Crop prediction error:", message);
-    return res.status(status).json({ message });
+    const upstream = error.response?.data;
+    const message =
+      upstream?.message ||
+      (error.code === "ECONNREFUSED" ? "ML service is not running on port 5001" : null) ||
+      error.message ||
+      "Prediction failed";
+    const details = upstream?.error || upstream?.details;
+
+    console.error("Crop prediction error:", {
+      endpoint: `${ML_SERVICE_URL}${endpointPath}`,
+      status,
+      message,
+      details,
+    });
+
+    return res.status(status).json({
+      message,
+      ...(details ? { details } : {}),
+    });
   } finally {
     if (req.file?.path && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);

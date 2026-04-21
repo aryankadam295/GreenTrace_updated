@@ -38,6 +38,7 @@ export const addToCart = async (req, res) => {
   try {
     const { productId, quantity = 1 } = req.body;
     const merchantId = req.user.id;
+    const parsedQuantity = Number(quantity);
 
     // Check if product exists and is available
     const product = await Product.findById(productId);
@@ -45,8 +46,12 @@ export const addToCart = async (req, res) => {
       return res.status(404).json({ message: "Product not found or not available" });
     }
 
+    if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
+      return res.status(400).json({ message: "Quantity must be greater than 0" });
+    }
+
     // Check if requested quantity is available
-    if (quantity > product.quantity) {
+    if (parsedQuantity > product.quantity) {
       return res.status(400).json({ 
         message: `Only ${product.quantity} ${product.unit} available` 
       });
@@ -65,7 +70,7 @@ export const addToCart = async (req, res) => {
 
     if (existingItemIndex > -1) {
       // Update quantity
-      const newQuantity = cart.items[existingItemIndex].quantity + quantity;
+      const newQuantity = cart.items[existingItemIndex].quantity + parsedQuantity;
       if (newQuantity > product.quantity) {
         return res.status(400).json({ 
           message: `Cannot add more. Only ${product.quantity} ${product.unit} available` 
@@ -76,7 +81,7 @@ export const addToCart = async (req, res) => {
       // Add new item
       cart.items.push({
         productId,
-        quantity,
+        quantity: parsedQuantity,
         priceAtTime: product.price
       });
     }
@@ -103,9 +108,10 @@ export const updateCartItem = async (req, res) => {
   try {
     const { productId, quantity } = req.body;
     const merchantId = req.user.id;
+    const parsedQuantity = Number(quantity);
 
-    if (quantity < 1) {
-      return res.status(400).json({ message: "Quantity must be at least 1" });
+    if (!Number.isFinite(parsedQuantity) || parsedQuantity <= 0) {
+      return res.status(400).json({ message: "Quantity must be greater than 0" });
     }
 
     const cart = await Cart.findOne({ merchantId });
@@ -127,13 +133,13 @@ export const updateCartItem = async (req, res) => {
       return res.status(404).json({ message: "Product not available" });
     }
 
-    if (quantity > product.quantity) {
+    if (parsedQuantity > product.quantity) {
       return res.status(400).json({ 
         message: `Only ${product.quantity} ${product.unit} available` 
       });
     }
 
-    cart.items[itemIndex].quantity = quantity;
+    cart.items[itemIndex].quantity = parsedQuantity;
     await cart.save();
 
     await cart.populate({

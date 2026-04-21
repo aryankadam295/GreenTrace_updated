@@ -138,7 +138,9 @@ export const getAllUsers = async (req, res) => {
         return {
           ...user.toObject(),
           activities,
-          status: user.isActive !== false ? 'Active' : 'Inactive'
+          status: user.isSuspended ? 'Suspended' : 'Active',
+          isSuspended: user.isSuspended || false,
+          suspendReason: user.suspendReason || null
         };
       })
     );
@@ -365,3 +367,95 @@ const getTimeAgo = (date) => {
   const diffInDays = Math.floor(diffInHours / 24);
   return `${diffInDays} days ago`;
 };
+export const getUserDetail = async (req, res) => {
+  try {
+    const { userId } = req.params;
+ 
+    const user = await User.findById(userId).select("-password").lean();
+    if (!user) return res.status(404).json({ message: "User not found" });
+ 
+    // Fetch role-specific stats
+    let stats = {};
+    if (user.role === "farmer") {
+      const [productCount, inquiryCount] = await Promise.all([
+        Product.countDocuments({ farmerId: userId }),
+        Inquiry.countDocuments({ farmerId: userId }),
+      ]);
+      const orders = await Order.find({ "items.farmerId": userId, paymentStatus: "paid" }).lean();
+      const totalRevenue = orders.reduce((sum, o) => {
+        const farmerItems = o.items.filter((i) => String(i.farmerId) === String(userId));
+        return sum + farmerItems.reduce((s, i) => s + (i.totalPrice || 0), 0);
+      }, 0);
+      stats = { productCount, inquiryCount, totalRevenue, orderCount: orders.length };
+    } else if (user.role === "merchant") {
+      const [orderCount, inquiryCount] = await Promise.all([
+        Order.countDocuments({ merchantId: userId }),
+        Inquiry.countDocuments({ merchantId: userId }),
+      ]);
+      const totalSpent = await Order.aggregate([
+        { $match: { merchantId: new mongoose.Types.ObjectId(userId), paymentStatus: "paid" } },
+        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+      ]);
+      stats = { orderCount, inquiryCount, totalSpent: totalSpent[0]?.total || 0 };
+    }
+ 
+    res.json({ user, stats });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+ 
+// ---------- EDIT USER ----------
+export const editUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { fullName, email, phoneNumber, isVerified } = req.body;
+ 
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+ 
+    // Only allow safe fields to be updated by admin
+    if (fullName)   user.fullName   = fullName.trim();
+    if (email)      user.email      = email.trim().toLowerCase();
+    if (phoneNumber)user.phoneNumber= phoneNumber.trim();
+    if (typeof isVerified === "boolean") user.isVerified = isVerified;
+ 
+    await user.save();
+    const updated = await User.findById(userId).select("-password");
+    res.json({ message: "User updated successfully", user: updated });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Email already in use by another account." });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+ 
+// ---------- SUSPEND / UNSUSPEND USER ----------
+export const toggleSuspendUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+ 
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (user.role === "admin") return res.status(403).json({ message: "Cannot suspend an admin account." });
+ 
+    const willBeSuspended = !user.isSuspended;
+    user.isSuspended   = willBeSuspended;
+    user.suspendedAt   = willBeSuspended ? new Date() : null;
+    user.suspendReason = willBeSuspended ? (reason || "Suspended by admin") : null;
+ 
+    await user.save();
+ 
+    res.json({
+      message: willBeSuspended
+        ? `User ${user.fullName} has been suspended.`
+        : `User ${user.fullName} has been reinstated.`,
+      isSuspended: user.isSuspended,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+ 

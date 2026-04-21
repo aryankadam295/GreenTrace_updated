@@ -13,7 +13,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1018.0",
+    "@aws-sdk/client-s3": "^3.1024.0",
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "axios": "^1.13.6",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",

@@ -1,11 +1,10 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 
-export const protect = (req, res, next) => {
-  // First try to get token from cookies
+export const protect = async (req, res, next) => {
+  // Get token from cookie or Authorization header
   let token = req.cookies.token;
 
-  // If no cookie token, try Authorization header
   if (!token) {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith("Bearer ")) {
@@ -19,7 +18,25 @@ export const protect = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // contains user ID and email
+
+    // ✅ FIXED: Always fetch fresh user from DB to check live suspension status
+    // This ensures blocked users are rejected even if their token is still valid
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({ message: "Account not found. Please login again." });
+    }
+
+    // ✅ FIXED: Block suspended users from ALL protected routes immediately
+    if (user.isSuspended) {
+      return res.status(403).json({
+        message: "Your account has been suspended.",
+        reason: user.suspendReason || "Please contact support for more information.",
+        suspended: true,  // frontend can use this flag to show a specific screen
+      });
+    }
+
+    req.user = user; // attach full user object (not just decoded token)
     next();
   } catch (error) {
     res.status(401).json({ message: "Invalid or expired token" });
@@ -29,11 +46,12 @@ export const protect = (req, res, next) => {
 // Admin-only middleware
 export const adminOnly = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id);
+    // req.user is already populated by protect() above — no extra DB call needed
+    const user = req.user;
 
-    if (!user || user.role !== 'admin') {
+    if (!user || user.role !== "admin") {
       return res.status(403).json({
-        message: "Access denied. Admin privileges required."
+        message: "Access denied. Admin privileges required.",
       });
     }
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Upload, Loader, AlertCircle, CheckCircle, Info, Leaf, Activity, Eye, TrendingUp, Video } from 'lucide-react';
+import { Upload, Loader, AlertCircle, Info, Leaf, Activity, Eye, TrendingUp, Video } from 'lucide-react';
 
 const CropDiseasePrediction = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
@@ -7,21 +7,11 @@ const CropDiseasePrediction = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
   const [videoPreview, setVideoPreview] = useState(null);
-  const [selectedCrop, setSelectedCrop] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   // NEW: track which mode is active
-  const [uploadMode, setUploadMode] = useState(null); // 'image' | 'video'
-
-  const cropOptions = [
-    { value: '', label: 'Select a crop', icon: '🌾' },
-    { value: 'tomato', label: 'Tomato', icon: '🍅' },
-    { value: 'potato', label: 'Potato', icon: '🥔' },
-    { value: 'rice', label: 'Rice', icon: '🌾' },
-    { value: 'wheat', label: 'Wheat', icon: '🌾' },
-    { value: 'cotton', label: 'Cotton', icon: '☁️' }
-  ];
+  const [uploadMode, setUploadMode] = useState(null);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -30,18 +20,27 @@ const CropDiseasePrediction = () => {
 
     if (file) {
       const isImage = file.type.startsWith('image/');
-      const isVideo = file.type.startsWith('video/');
-
-      if (!isImage && !isVideo) {
-        setError('Please upload a valid image or video file');
+      if (!isImage) {
+        setError('Please upload a valid image file');
         return;
       }
 
-      // Clear video state and set mode to image
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!validTypes.includes(file.type)) {
+        setError('Please upload a valid image file (JPG, JPEG, or PNG)');
+        return;
+      }
+
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setError('Image size must be less than 5MB');
+        return;
+      }
+
       setSelectedVideo(null);
       setVideoPreview(null);
       setSelectedImage(file);
-      setUploadMode('image'); // ✅ explicitly track mode
+      setUploadMode('image');
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -57,7 +56,7 @@ const CropDiseasePrediction = () => {
     setResult(null);
 
     if (file) {
-      const validTypes = ['video/mp4', 'video/avi', 'video/mov'];
+      const validTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo'];
       if (!validTypes.includes(file.type)) {
         setError('Please upload a valid video file (MP4, AVI, MOV)');
         return;
@@ -74,14 +73,8 @@ const CropDiseasePrediction = () => {
       setImagePreview(null);
       setSelectedVideo(file);
       setVideoPreview(URL.createObjectURL(file));
-      setUploadMode('video'); // ✅ explicitly track mode
+      setUploadMode('video');
     }
-  };
-
-  const handleCropChange = (e) => {
-    setSelectedCrop(e.target.value);
-    setError('');
-    setResult(null);
   };
 
   const handleScanCrop = async () => {
@@ -93,11 +86,9 @@ const CropDiseasePrediction = () => {
     console.log('uploadMode:', uploadMode);
     console.log('selectedImage:', selectedImage);
     console.log('selectedVideo:', selectedVideo);
-    console.log('selectedCrop:', selectedCrop);
 
     try {
       const formData = new FormData();
-      formData.append('crop', selectedCrop);
 
       let endpoint = '';
 
@@ -129,9 +120,12 @@ const CropDiseasePrediction = () => {
       const data = await response.json();
       console.log('✅ Response:', data);
 
+      const diseaseRaw = data.disease || 'Unknown';
+      const [cropPart, diseasePart] = diseaseRaw.split('___');
       const formattedResult = {
-        cropName: selectedCrop.toUpperCase(),
-        possibleIssue: data.disease,
+        cropName: (cropPart || 'Unknown').replace(/_/g, ' '),
+        possibleIssue: (diseasePart || diseaseRaw).replace(/_/g, ' '),
+        supplement: data.supplement || null,
         urgencyLevel: 'medium',
         immediateSteps: [
           'Remove infected leaves from the plant',
@@ -152,7 +146,7 @@ const CropDiseasePrediction = () => {
   };
 
   // ✅ Button disabled if no file selected (using uploadMode) or no crop or loading
-  const isButtonDisabled = !uploadMode || !selectedCrop || isLoading;
+  const isButtonDisabled = !uploadMode || isLoading;
 
   const styles = {
     container: {
@@ -252,6 +246,17 @@ const CropDiseasePrediction = () => {
       fontSize: '1.25rem',
       fontWeight: '700',
       margin: 0
+    },
+    select: {
+      width: '100%',
+      padding: '0.95rem 1rem',
+      borderRadius: '12px',
+      border: '2px solid #a5d6a7',
+      background: '#fff',
+      color: '#1b5e20',
+      fontSize: '1rem',
+      fontWeight: '600',
+      outline: 'none'
     },
     fileInput: {
       display: 'none'
@@ -681,34 +686,7 @@ const CropDiseasePrediction = () => {
             </label>
           </div>
 
-          {/* ── Crop Selection ── */}
-          <div style={styles.card} className="card-responsive" onMouseEnter={cardHoverOn} onMouseLeave={cardHoverOff}>
-            <div style={styles.cardHeader}>
-              <div style={styles.cardIcon}><Leaf size={20} /></div>
-              <h2 style={styles.cardTitle}>Select Crop Type</h2>
-            </div>
-            <select
-              value={selectedCrop}
-              onChange={handleCropChange}
-              style={styles.select}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#4caf50';
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#a5d6a7';
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              {cropOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.icon} {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* ── Scan Button ── */}
+          {/* Scan Button */}
           <button
             onClick={handleScanCrop}
             disabled={isButtonDisabled}
@@ -766,6 +744,38 @@ const CropDiseasePrediction = () => {
                   <p style={styles.resultItemText}>{result.possibleIssue}</p>
                 </div>
 
+                <div style={styles.resultItem}>
+                  <h3 style={styles.resultItemTitle}><Info size={16} />Recommended Supplement</h3>
+                  {result.supplement?.name ? (
+                    <>
+                      <p style={styles.resultItemText}>{result.supplement.name}</p>
+                      {result.supplement.image && (
+                        <img
+                          src={result.supplement.image}
+                          alt={result.supplement.name}
+                          style={{ marginTop: '0.75rem', maxWidth: '180px', borderRadius: '10px' }}
+                        />
+                      )}
+                      {result.supplement.buy_link && (
+                        <p style={{ marginTop: '0.75rem' }}>
+                          <a
+                            href={result.supplement.buy_link}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ color: '#2e7d32', fontWeight: 700 }}
+                          >
+                            Buy Supplement
+                          </a>
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p style={styles.resultItemText}>
+                      Supplement information is not available for this disease yet.
+                    </p>
+                  )}
+                </div>
+
                 {result.description && (
                   <div style={styles.resultItem}>
                     <h3 style={styles.resultItemTitle}>
@@ -812,4 +822,6 @@ const CropDiseasePrediction = () => {
   );
 };
 
-export default CropDiseasePrediction;
+export default CropDiseasePrediction
+
+

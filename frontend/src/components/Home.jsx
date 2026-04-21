@@ -21,7 +21,7 @@ const Home = () => {
                 Add Product
               </Link>
               <Link
-                to="/marketplace"
+                to="/signup"
                 className="bg-green-700 bg-opacity-90 text-white font-semibold px-6 py-3 rounded-md hover:bg-green-800 transition"
               >
                 Explore Marketplace

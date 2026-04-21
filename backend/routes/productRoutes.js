@@ -3,6 +3,7 @@ import {
   createProduct,
   getFarmerProducts,
   getProduct,
+  getProducts, 
   updateProduct,
   deleteProduct,
   getFarmerAnalytics
@@ -17,6 +18,7 @@ router.use(protect);
 
 // Product CRUD operations
 router.post("/", upload.array('images', 5), createProduct);  // POST /api/products
+router.get("/", getProducts);
 router.get("/farmer", getFarmerProducts);          // GET /api/products/farmer
 router.get("/analytics", getFarmerAnalytics);      // GET /api/products/analytics
 router.get("/:id", getProduct);                    // GET /api/products/:id

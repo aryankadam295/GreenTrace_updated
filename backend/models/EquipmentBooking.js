@@ -33,10 +33,35 @@ const equipmentBookingSchema = new mongoose.Schema({
     default: 'requested',
     enum: ['requested', 'approved', 'rejected', 'in-use', 'completed', 'cancelled']
   },
+
+  // ✅ Payment fields
+  paymentStatus: {
+    type: String,
+    enum: ['pending', 'paid', 'failed', 'refunded'],
+    default: 'pending'
+  },
+  paymentMethod: {
+    type: String,
+    enum: ['upi', 'cash', 'none'],
+    default: 'none'
+  },
+  upiTransactionId: {
+    type: String,
+    default: null
+  },
+  paidAt: {
+    type: Date,
+    default: null
+  },
+  bookingId: {
+    type: String,
+    unique: true,
+    sparse: true  // allows null, enforces unique when set
+  },
   
   // Additional Info
-  renterMessage: { type: String }, // Message from renter when requesting
-  ownerResponse: { type: String }, // Response from owner
+  renterMessage: { type: String },
+  ownerResponse: { type: String },
   
   // Status History
   statusHistory: [{
@@ -65,5 +90,6 @@ equipmentBookingSchema.index({ equipmentId: 1, status: 1 }, { background: true }
 equipmentBookingSchema.index({ renterId: 1, status: 1 }, { background: true });
 equipmentBookingSchema.index({ ownerId: 1, status: 1 }, { background: true });
 equipmentBookingSchema.index({ startDate: 1, endDate: 1 }, { background: true });
+equipmentBookingSchema.index({ paymentStatus: 1 }, { background: true }); // ✅ NEW
 
 export default mongoose.model("EquipmentBooking", equipmentBookingSchema);

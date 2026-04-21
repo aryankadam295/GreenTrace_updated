@@ -6,7 +6,7 @@ const cartItemSchema = new mongoose.Schema({
     ref: 'Product', 
     required: true 
   },
-  quantity: { type: Number, required: true, min: 1 },
+  quantity: { type: Number, required: true, min: 0.001 },
   priceAtTime: { type: Number, required: true }, // Price when added to cart
   addedAt: { type: Date, default: Date.now }
 });

@@ -112,6 +112,25 @@ export const getProduct = async (req, res) => {
   }
 };
 
+export const getProducts = async (req, res) => {
+  try {
+    const { farmerId, status = 'listed', limit = 50 } = req.query;
+
+    let query = {};
+
+    if (status) query.status = status;
+    if (farmerId) query.farmerId = farmerId;
+
+    const products = await Product.find(query)
+      .sort({ createdAt: -1 })
+      .limit(Number(limit));
+
+    res.status(200).json({ products });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // ---------- UPDATE PRODUCT ----------
 export const updateProduct = async (req, res) => {
   try {

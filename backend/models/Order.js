@@ -7,7 +7,7 @@ const orderItemSchema = new mongoose.Schema({
     required: true 
   },
   productName: { type: String, required: true },
-  quantity: { type: Number, required: true, min: 1 },
+  quantity: { type: Number, required: true, min: 0.001 },
   pricePerUnit: { type: Number, required: true },
   totalPrice: { type: Number, required: true },
   farmerId: { 
@@ -53,13 +53,39 @@ const orderSchema = new mongoose.Schema({
   // Payment information
   paymentMethod: { 
     type: String, 
-    enum: ['cash_on_delivery', 'online_payment', 'bank_transfer'],
+    enum: ['cash_on_delivery', 'online_payment', 'bank_transfer', 'upi'], // ✅ added upi
     default: 'cash_on_delivery'
   },
   paymentStatus: { 
     type: String, 
     enum: ['pending', 'paid', 'failed', 'refunded'],
     default: 'pending'
+  },
+  paymentGateway: {
+    type: String,
+    enum: ['paypal', 'none', 'upi_direct'], // ✅ added upi_direct
+    default: 'none'
+  },
+
+  // PayPal fields (kept for legacy orders)
+  paypalOrderId: {
+    type: String,
+    index: true
+  },
+  paypalCaptureId: {
+    type: String
+  },
+
+  // UPI fields
+  upiTransactionIds: [
+    {
+      farmerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      upiTransactionId: { type: String }
+    }
+  ],
+
+  paidAt: {
+    type: Date
   },
   
   // Timestamps
