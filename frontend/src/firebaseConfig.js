@@ -2,12 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB-sYppk20SbhVsK64f-6TqjNHl_bLEdi4",
-  authDomain: "project-647428543613.firebaseapp.com",
-  projectId: "project-647428543613",
-  storageBucket: "project-647428543613.appspot.com",
-  messagingSenderId: "647428543613",
-  appId: "new-greentrace-473618"
+  apiKey: "AIzaSyCtIGS8Z_BzrS6dt4ETNmBD8OX1qhfcn-Q",
+  authDomain: "greentrace-8647f.firebaseapp.com",
+  projectId: "greentrace-8647f",
+  storageBucket: "greentrace-8647f.firebasestorage.app",
+  messagingSenderId: "834618421742",
+  appId: "1:834618421742:web:73c9be52bd0d26dd1f9eff"
 };
 
 // Initialize Firebase

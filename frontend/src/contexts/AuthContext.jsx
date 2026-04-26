@@ -65,6 +65,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleAuth = async (payload) => {
+    try {
+      setLoading(true);
+      const response = await authAPI.googleAuth(payload);
+
+      if (response.user) {
+        setUser(response.user);
+        setIsAuthenticated(true);
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }
+
+      return response;
+    } catch (error) {
+      console.error('Google auth error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     try {
       setLoading(true);
@@ -86,6 +106,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     signup,
+    googleAuth,
     logout,
   };
 

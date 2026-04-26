@@ -51,6 +51,13 @@ const productSchema = new mongoose.Schema({
   // Analytics
   views: { type: Number, default: 0 },
   inquiries: { type: Number, default: 0 },
+  merchantQualityRating: { type: Number, default: 0 },
+  merchantQualityReviewCount: { type: Number, default: 0 },
+  merchantVerifiedGrade: {
+    type: String,
+    enum: ['Premium', 'Grade A', 'Grade B', 'Standard', null],
+    default: null
+  },
   
   // Timestamps
   createdAt: { type: Date, default: Date.now },

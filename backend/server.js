@@ -17,6 +17,7 @@ import chatRoutes from "./routes/chatRoutes.js";
 import equipmentRoutes from "./routes/equipmentRoutes.js";
 import cropRoutes from "./routes/cropRoutes.js";
 import landRoutes from "./routes/landRoutes.js";
+import merchantCommunityRoutes from "./routes/merchantCommunityRoutes.js";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.get("/api/test", (req, res) => {
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/inquiries", inquiryRoutes);
+app.use("/api/merchant-community", merchantCommunityRoutes);
 app.use("/api/merchant", merchantRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/chat", chatRoutes);

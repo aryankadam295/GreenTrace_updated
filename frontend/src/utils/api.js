@@ -91,6 +91,21 @@ export const authAPI = {
       throw error;
     }
   },
+
+  googleAuth: async (payload) => {
+    try {
+      const response = await api.post('/users/google-auth', payload);
+
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error('Google Auth API Error:', error.response?.data);
+      throw error;
+    }
+  },
   
   logout: async () => {
     try {
@@ -146,6 +161,19 @@ export const merchantAPI = {
   removeFromWishlist: (productId) => api.delete(`/merchant/wishlist/${productId}`),
   clearWishlist: () => api.delete('/merchant/wishlist'),
   moveToCart: (data) => api.post('/merchant/wishlist/move-to-cart', data)
+};
+
+// Merchant community API endpoints
+export const merchantCommunityAPI = {
+  getMerchants: (params) => api.get('/merchant-community/merchants', { params }),
+  getListings: (params) => api.get('/merchant-community/listings', { params }),
+  createListing: (data) => api.post('/merchant-community/listings', data),
+  updateListing: (listingId, data) => api.put(`/merchant-community/listings/${listingId}`, data),
+  deleteListing: (listingId) => api.delete(`/merchant-community/listings/${listingId}`),
+  getChats: () => api.get('/merchant-community/chats'),
+  createChat: (data) => api.post('/merchant-community/chats', data),
+  getChatMessages: (chatId) => api.get(`/merchant-community/chats/${chatId}`),
+  sendMessage: (chatId, data) => api.post(`/merchant-community/chats/${chatId}/messages`, data)
 };
 
 // Admin API endpoints

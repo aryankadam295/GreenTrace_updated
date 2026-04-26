@@ -1,5 +1,5 @@
 import express from "express";
-import { signupUser, loginUser, logoutUser } from "../controllers/userController.js";
+import { signupUser, loginUser, logoutUser, googleAuthUser } from "../controllers/userController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import User from "../models/User.js";
 import Order from "../models/Order.js";
@@ -12,6 +12,7 @@ const router = express.Router();
 
 router.post("/signup", signupUser);
 router.post("/login", loginUser);
+router.post("/google-auth", googleAuthUser);
 router.post("/logout", logoutUser);
 
 router.get("/profile", protect, (req, res) => {

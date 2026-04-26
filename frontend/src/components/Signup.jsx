@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../firebaseConfig';
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { signup, googleAuth } = useAuth();
   const [step, setStep] = useState(1); // 1: Role Selection, 2: Form
   const [role, setRole] = useState('');
   const [formData, setFormData] = useState({
@@ -118,6 +120,48 @@ const Signup = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const validateGoogleSignup = () => {
+    const newErrors = {};
+
+    if (!formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(formData.phoneNumber.replace(/\D/g, ''))) {
+      newErrors.phoneNumber = 'Phone number must be 10 digits';
+    }
+
+    if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+
+    if (role === 'farmer') {
+      if (!formData.village.trim()) {
+        newErrors.village = 'Village is required';
+      }
+      if (!formData.district.trim()) {
+        newErrors.district = 'District is required';
+      }
+      if (!formData.state.trim()) {
+        newErrors.state = 'State is required';
+      }
+    } else if (role === 'merchant') {
+      if (!formData.businessName.trim()) {
+        newErrors.businessName = 'Business name is required';
+      }
+      if (!formData.businessType) {
+        newErrors.businessType = 'Business type is required';
+      }
+      if (!formData.city.trim()) {
+        newErrors.city = 'City is required';
+      }
+      if (!formData.merchantState.trim()) {
+        newErrors.merchantState = 'State is required';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -154,15 +198,51 @@ const Signup = () => {
   };
 
   const handleGoogleSignup = async () => {
+    if (!validateGoogleSignup()) {
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
-      console.log('Google signup successful:', user);
-      // TODO: Handle post-signup logic, e.g., save user data to backend
+      const idToken = await user.getIdToken();
+
+      if (formData.email.trim() && formData.email.trim().toLowerCase() !== user.email?.toLowerCase()) {
+        setErrors({ general: 'The entered email must match the selected Google account.' });
+        return;
+      }
+
+      await googleAuth({
+        idToken,
+        fullName: formData.fullName.trim() || user.displayName || '',
+        email: formData.email.trim() || user.email || '',
+        phoneNumber: formData.phoneNumber.trim(),
+        role,
+        village: formData.village.trim(),
+        district: formData.district.trim(),
+        state: formData.state,
+        businessName: formData.businessName.trim(),
+        businessType: formData.businessType,
+        city: formData.city.trim(),
+        merchantState: formData.merchantState
+      });
+
       alert('Account created successfully with Google!');
+      if (role === 'farmer') {
+        navigate('/farmer-dashboard');
+      } else if (role === 'merchant') {
+        navigate('/merchant-dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       console.error('Google signup error:', error);
-      setErrors({ general: 'Google signup failed. Please try again.' });
+      const errorMessage = error.response?.data?.message || 'Google signup failed. Please try again.';
+      setErrors({ general: errorMessage });
+    } finally {
+      setIsLoading(false);
     }
   };
 

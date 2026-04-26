@@ -8,6 +8,7 @@ import Wishlist from './merchant/Wishlist';
 import Orders from './merchant/Orders';
 import Analytics from './merchant/Analytics';
 import Chatbox from './merchant/Chatbox';
+import MerchantCommunity from './merchant/MerchantCommunity';
 import MerchantInquiries from './merchant/MerchantInquiries'; // ✅ NEW
 
 const MerchantDashboard = () => {
@@ -60,6 +61,7 @@ const MerchantDashboard = () => {
     { id: 'wishlist',  label: 'Wishlist',          icon: '❤️' },
     { id: 'orders',    label: 'My Orders',         icon: '📦' },
     { id: 'inquiries', label: 'Inquiries',          icon: '💬' },
+    { id: 'community', label: 'Trade Network',      icon: '🤝' },
     { id: 'chat',      label: 'Chat',              icon: '💭' },
     { id: 'analytics', label: 'Analytics',          icon: '📊' },
   ];
@@ -71,6 +73,7 @@ const MerchantDashboard = () => {
       case 'wishlist':  return <Wishlist onUpdate={() => fetchAnalytics()} />;
       case 'orders':    return <Orders onUpdate={() => fetchAnalytics()} />;
       case 'inquiries': return <MerchantInquiries />; // ✅ REPLACED
+      case 'community': return <MerchantCommunity />;
       case 'chat':      return <Chatbox />;
       case 'analytics': return <Analytics analytics={analytics} />;
       default:          return <BrowseProducts />;

@@ -4,6 +4,7 @@ import { protect } from "../middleware/authMiddleware.js";
 import Cart from "../models/Cart.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
+import ProductQualityReview from "../models/ProductQualityReview.js";
 import User from "../models/User.js";
 import Equipment from "../models/Equipment.js";           // ✅ NEW
 import EquipmentBooking from "../models/EquipmentBooking.js"; // ✅ NEW
@@ -43,6 +44,46 @@ const farmerOnly = async (req, res, next) => {
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
+};
+
+const refreshProductQualitySummary = async (productId) => {
+  const reviews = await ProductQualityReview.find({ productId }).lean();
+  const reviewCount = reviews.length;
+
+  if (reviewCount === 0) {
+    await Product.findByIdAndUpdate(productId, {
+      merchantQualityRating: 0,
+      merchantQualityReviewCount: 0,
+      merchantVerifiedGrade: null
+    });
+    return;
+  }
+
+  const averageRating =
+    reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviewCount;
+
+  const gradeWeight = {
+    Premium: 4,
+    "Grade A": 3,
+    "Grade B": 2,
+    Standard: 1
+  };
+
+  const gradeTotals = reviews.reduce((acc, review) => {
+    acc[review.verifiedQualityGrade] = (acc[review.verifiedQualityGrade] || 0) + 1;
+    return acc;
+  }, {});
+
+  const merchantVerifiedGrade = Object.entries(gradeTotals).sort((a, b) => {
+    if (b[1] !== a[1]) return b[1] - a[1];
+    return gradeWeight[b[0]] - gradeWeight[a[0]];
+  })[0][0];
+
+  await Product.findByIdAndUpdate(productId, {
+    merchantQualityRating: Number(averageRating.toFixed(1)),
+    merchantQualityReviewCount: reviewCount,
+    merchantVerifiedGrade
+  });
 };
 
 // Any logged-in user can rent equipment (farmer or merchant)
@@ -196,8 +237,84 @@ router.post("/confirm-upi-payment", merchantOnly, async (req, res) => {
 router.get("/merchant-orders", merchantOnly, async (req, res) => {
   try {
     const orders = await Order.find({ merchantId: req.user.id }).sort({ createdAt: -1 }).lean();
-    res.status(200).json({ orders });
+    const orderIds = orders.map((order) => order._id);
+    const reviews = await ProductQualityReview.find({
+      merchantId: req.user.id,
+      orderId: { $in: orderIds }
+    }).lean();
+
+    const reviewByOrderProduct = reviews.reduce((acc, review) => {
+      acc[`${review.orderId}-${review.productId}`] = review;
+      return acc;
+    }, {});
+
+    const ordersWithReviews = orders.map((order) => ({
+      ...order,
+      items: (order.items || []).map((item) => ({
+        ...item,
+        qualityReview: reviewByOrderProduct[`${order._id}-${item.productId}`] || null
+      }))
+    }));
+
+    res.status(200).json({ orders: ordersWithReviews });
   } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// POST merchant quality review for a purchased product
+router.post("/product-quality-reviews", merchantOnly, async (req, res) => {
+  try {
+    const { orderId, productId, rating, verifiedQualityGrade, comment } = req.body;
+
+    if (!orderId || !productId || !rating || !verifiedQualityGrade) {
+      return res.status(400).json({
+        message: "orderId, productId, rating, and verifiedQualityGrade are required."
+      });
+    }
+
+    const numericRating = Number(rating);
+    if (!Number.isFinite(numericRating) || numericRating < 1 || numericRating > 5) {
+      return res.status(400).json({ message: "Rating must be between 1 and 5." });
+    }
+
+    const order = await Order.findOne({
+      _id: orderId,
+      merchantId: req.user.id,
+      paymentStatus: "paid"
+    });
+
+    if (!order) {
+      return res.status(404).json({ message: "Paid order not found for this merchant." });
+    }
+
+    const orderItem = order.items.find((item) => String(item.productId) === String(productId));
+    if (!orderItem) {
+      return res.status(400).json({ message: "This product is not part of the selected order." });
+    }
+
+    const review = await ProductQualityReview.create({
+      productId,
+      orderId: order._id,
+      merchantId: req.user.id,
+      farmerId: orderItem.farmerId,
+      rating: numericRating,
+      verifiedQualityGrade,
+      comment,
+      merchantName: req.merchant.fullName,
+      farmerName: orderItem.farmerName
+    });
+
+    await refreshProductQualitySummary(productId);
+
+    res.status(201).json({
+      message: "Product quality review submitted successfully.",
+      review
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "You have already reviewed this product for this order." });
+    }
     res.status(500).json({ message: error.message });
   }
 });

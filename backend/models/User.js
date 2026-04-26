@@ -4,7 +4,16 @@ const userSchema = new mongoose.Schema({
   // Common fields
   fullName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: {
+    type: String,
+    required: function() { return this.authProvider === 'local'; }
+  },
+  authProvider: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
+  },
+  googleId: { type: String, default: null },
   phoneNumber: { type: String, required: true },
   role: { type: String, required: true, enum: ['farmer', 'merchant', 'admin'] },
 

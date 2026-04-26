@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../firebaseConfig';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, googleAuth } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -68,16 +70,7 @@ const Login = () => {
       // DEBUG: Log successful response
       console.log('✅ Login successful:', response);
 
-      // Redirect based on user role
-      if (response.user?.role === 'farmer') {
-        navigate('/farmer-dashboard');
-      } else if (response.user?.role === 'merchant') {
-        navigate('/merchant-dashboard');
-      } else if (response.user?.role === 'admin') {
-        navigate('/admin-dashboard');
-      } else {
-        navigate('/');
-      }
+      redirectAfterAuth(response.user);
     } catch (error) {
       console.error('❌ Login error:', error);
 
@@ -109,6 +102,36 @@ const Login = () => {
     setTimeout(() => {
       document.getElementById('password').focus();
     }, 100);
+  };
+
+  const redirectAfterAuth = (user) => {
+    if (user?.role === 'farmer') {
+      navigate('/farmer-dashboard');
+    } else if (user?.role === 'merchant') {
+      navigate('/merchant-dashboard');
+    } else if (user?.role === 'admin') {
+      navigate('/admin-dashboard');
+    } else {
+      navigate('/');
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    setErrors({});
+
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+      const response = await googleAuth({ idToken });
+      redirectAfterAuth(response.user);
+    } catch (error) {
+      console.error('Google login error:', error);
+      const errorMessage = error.response?.data?.message || 'Google login failed. Please try again.';
+      setErrors({ general: errorMessage });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -219,6 +242,22 @@ const Login = () => {
                 }`}
               >
                 {isLoading ? 'Signing in...' : 'Sign in'}
+              </button>
+            </div>
+
+            <div>
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+                className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+              >
+                <img
+                  src="https://developers.google.com/identity/images/g-logo.png"
+                  alt="Google logo"
+                  className="h-5 w-5 mr-2"
+                />
+                Continue with Google
               </button>
             </div>
           </form>

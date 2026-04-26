@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import LanguageSelector from "./LanguageSelector";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -128,6 +129,8 @@ const Navbar = () => {
               </button>
             </>
           )}
+
+          <LanguageSelector />
 
           {!isAuthenticated && (
             <>
@@ -262,6 +265,8 @@ const Navbar = () => {
               </button>
             </>
           )}
+
+          <LanguageSelector compact />
 
           {!isAuthenticated && (
             <>
