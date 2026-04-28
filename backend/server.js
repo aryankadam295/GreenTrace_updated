@@ -18,6 +18,8 @@ import equipmentRoutes from "./routes/equipmentRoutes.js";
 import cropRoutes from "./routes/cropRoutes.js";
 import landRoutes from "./routes/landRoutes.js";
 import merchantCommunityRoutes from "./routes/merchantCommunityRoutes.js";
+import schemeRoutes from "./routes/schemeRoutes.js";
+import marketPriceRoutes from "./routes/marketPriceRoutes.js";
 
 dotenv.config();
 
@@ -51,6 +53,8 @@ app.use("/api/equipment", equipmentRoutes);
 app.use("/api", cropRoutes);
 app.use("/api/land", landRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/schemes", schemeRoutes);
+app.use("/api/market-prices", marketPriceRoutes);
 
 // Static files
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
