@@ -233,3 +233,11 @@ export const equipmentAPI = {
   getChatMessages: (chatId) => api.get(`/equipment/chats/${chatId}`),
   sendMessage: (chatId, data) => api.post(`/equipment/chats/${chatId}/messages`, data)
 };
+
+// Market price API endpoints
+export const marketPriceAPI = {
+  getLive: (params) => api.get('/market-prices/live', { params }),
+  getCommodities: (params) => api.get('/market-prices/commodities', { params }),
+  getOptions: (params) => api.get('/market-prices/options', { params }),
+  geocode: (params) => api.get('/market-prices/geocode', { params }),
+};

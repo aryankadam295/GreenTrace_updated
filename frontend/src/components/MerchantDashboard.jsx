@@ -10,6 +10,7 @@ import Analytics from './merchant/Analytics';
 import Chatbox from './merchant/Chatbox';
 import MerchantCommunity from './merchant/MerchantCommunity';
 import MerchantInquiries from './merchant/MerchantInquiries'; // ✅ NEW
+import MarketPrices from './MarketPrices';
 
 const MerchantDashboard = () => {
   const { user, isAuthenticated } = useAuth();
@@ -62,6 +63,7 @@ const MerchantDashboard = () => {
     { id: 'orders',    label: 'My Orders',         icon: '📦' },
     { id: 'inquiries', label: 'Inquiries',          icon: '💬' },
     { id: 'community', label: 'Trade Network',      icon: '🤝' },
+    { id: 'marketPrices', label: 'Live Market Prices', icon: '📍' },
     { id: 'chat',      label: 'Chat',              icon: '💭' },
     { id: 'analytics', label: 'Analytics',          icon: '📊' },
   ];
@@ -74,6 +76,7 @@ const MerchantDashboard = () => {
       case 'orders':    return <Orders onUpdate={() => fetchAnalytics()} />;
       case 'inquiries': return <MerchantInquiries />; // ✅ REPLACED
       case 'community': return <MerchantCommunity />;
+      case 'marketPrices': return <MarketPrices />;
       case 'chat':      return <Chatbox />;
       case 'analytics': return <Analytics analytics={analytics} />;
       default:          return <BrowseProducts />;

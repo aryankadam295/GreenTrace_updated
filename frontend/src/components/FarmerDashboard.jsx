@@ -12,6 +12,8 @@ import CropDiseasePrediction from './farmer/CropDiseasePrediction';
 import LandHub from './Land/LandHub';
 import UpiSettings from './farmer/UpiSettings';
 import RecentActivities from './farmer/RecentActivities';
+import GovernmentSchemes from './farmer/GovernmentSchemes';
+import MarketPrices from './MarketPrices';
 
 const FarmerDashboard = () => {
   const { user, isAuthenticated } = useAuth();
@@ -80,6 +82,8 @@ const FarmerDashboard = () => {
     { id: 'equipment',             label: 'Equipment Hub',           icon: '🚜' },
     { id: 'landRentals',           label: 'Land Rentals',            icon: '🏞️' },
     { id: 'CropDiseasePrediction', label: 'Crop Disease Prediction', icon: '🔬' },
+    { id: 'governmentSchemes',     label: 'Government Schemes',      icon: '🏛️' },
+    { id: 'marketPrices',          label: 'Live Market Prices',      icon: '📍' },
   ];
 
   const renderContent = () => {
@@ -91,9 +95,18 @@ const FarmerDashboard = () => {
             transactions={transactions}
             equipmentTxns={equipmentTxns}
             setActiveTab={setActiveTab}
+            activityRefresh={activityRefresh}
           />
         );
-      case 'upload':               return <ProductUpload onSuccess={() => fetchAnalytics()} />;
+      case 'upload':
+        return (
+          <ProductUpload
+            onSuccess={() => {
+              fetchAnalytics();
+              setActivityRefresh((prev) => prev + 1);
+            }}
+          />
+        );
       case 'products':             return <ProductList />;
       case 'inquiries':            return <InquiryList />;
       case 'upi':                  return <UpiSettings />;
@@ -102,8 +115,8 @@ const FarmerDashboard = () => {
       case 'equipment':            return <EquipmentHub />;
       case 'landRentals':          return <LandHub embeddedInDashboard />;
       case 'CropDiseasePrediction':return <CropDiseasePrediction />;
-      case 'upload':return <ProductUpload onSuccess={() => { fetchAnalytics(); setActivityRefresh(prev => prev + 1);}} />;
-      case 'overview': return <DashboardOverview analytics={analytics} transactions={transactions} equipmentTxns={equipmentTxns} setActiveTab={setActiveTab} activityRefresh={activityRefresh}/>;
+      case 'governmentSchemes':    return <GovernmentSchemes />;
+      case 'marketPrices':         return <MarketPrices />;
       default:
         return (
           <DashboardOverview
@@ -111,6 +124,7 @@ const FarmerDashboard = () => {
             transactions={transactions}
             equipmentTxns={equipmentTxns}
             setActiveTab={setActiveTab}
+            activityRefresh={activityRefresh}
           />
         );
     }
