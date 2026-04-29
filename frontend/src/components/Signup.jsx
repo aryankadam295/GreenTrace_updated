@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebaseConfig';
+import { getGoogleAuthErrorMessage } from '../utils/googleAuthError';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -239,7 +240,7 @@ const Signup = () => {
       }
     } catch (error) {
       console.error('Google signup error:', error);
-      const errorMessage = error.response?.data?.message || 'Google signup failed. Please try again.';
+      const errorMessage = getGoogleAuthErrorMessage(error, 'Google signup failed. Please try again.');
       setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);

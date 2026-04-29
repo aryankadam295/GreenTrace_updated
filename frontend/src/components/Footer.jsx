@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -8,15 +9,15 @@ const Footer = () => {
           &copy; {new Date().getFullYear()} GreenTrace. All rights reserved.
         </p>
         <div className="space-x-4">
-          <a href="/about" className="hover:text-green-300 transition">
+          <Link to="/about" className="hover:text-green-300 transition">
             About Us
-          </a>
-          <a href="/contact" className="hover:text-green-300 transition">
+          </Link>
+          <Link to="/contact" className="hover:text-green-300 transition">
             Contact
-          </a>
-          <a href="/privacy" className="hover:text-green-300 transition">
+          </Link>
+          <Link to="/privacy" className="hover:text-green-300 transition">
             Privacy Policy
-          </a>
+          </Link>
         </div>
       </div>
     </footer>

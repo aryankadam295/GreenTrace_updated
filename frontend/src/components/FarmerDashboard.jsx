@@ -3,7 +3,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import ProductUpload from './farmer/ProductUpload';
-import ProductList from './farmer/ProductList';
 import InquiryList from './farmer/InquiryList';
 import Analytics from './farmer/Analytics';
 import Chatbox from './farmer/Chatbox';
@@ -14,6 +13,7 @@ import UpiSettings from './farmer/UpiSettings';
 import RecentActivities from './farmer/RecentActivities';
 import GovernmentSchemes from './farmer/GovernmentSchemes';
 import MarketPrices from './MarketPrices';
+import WeatherPage from './farmer/WeatherPage';
 
 import AIAssistantWidget from './shared/AIAssistantWidget';
 
@@ -27,6 +27,7 @@ const FarmerDashboard = () => {
   const [equipmentTxns, setEquipmentTxns] = useState([]);    // ✅ equipment txns
   const [loading, setLoading] = useState(true);
   const [activityRefresh, setActivityRefresh] = useState(0);
+  const [productRefresh, setProductRefresh] = useState(0);
  
 
   useEffect(() => {
@@ -40,7 +41,7 @@ const FarmerDashboard = () => {
 
   useEffect(() => {
     const section = new URLSearchParams(location.search).get('section');
-    if (section) setActiveTab(section);
+    if (section) setActiveTab(section === 'products' ? 'upload' : section);
   }, [location.search]);
 
   const fetchAnalytics = async () => {
@@ -76,14 +77,9 @@ const FarmerDashboard = () => {
   const sidebarItems = [
     { id: 'overview',              label: 'Overview',               icon: '📊' },
     { id: 'upload',                label: 'Upload Product',          icon: '📦' },
-    { id: 'products',              label: 'My Products',             icon: '🌾' },
-    { id: 'inquiries',             label: 'Inquiries',               icon: '💬' },
-    { id: 'upi',                   label: 'UPI Settings',            icon: '💳' },
-    { id: 'chat',                  label: 'Chat',                    icon: '💭' },
-    { id: 'analytics',             label: 'Reports',                 icon: '📈' },
+    { id: 'CropDiseasePrediction', label: 'Crop Disease Prediction', icon: '🔬' },
     { id: 'equipment',             label: 'Equipment Hub',           icon: '🚜' },
     { id: 'landRentals',           label: 'Land Rentals',            icon: '🏞️' },
-    { id: 'CropDiseasePrediction', label: 'Crop Disease Prediction', icon: '🔬' },
     { id: 'governmentSchemes',     label: 'Government Schemes',      icon: '🏛️' },
     { id: 'marketPrices',          label: 'Live Market Prices',      icon: '📍' },
   ];
@@ -106,14 +102,17 @@ const FarmerDashboard = () => {
             onSuccess={() => {
               fetchAnalytics();
               setActivityRefresh((prev) => prev + 1);
+              setProductRefresh((prev) => prev + 1);
             }}
+            showProducts
+            productRefreshKey={productRefresh}
           />
         );
-      case 'products':             return <ProductList />;
       case 'inquiries':            return <InquiryList />;
       case 'upi':                  return <UpiSettings />;
       case 'chat':                 return <Chatbox />;
-      case 'analytics':            return <Analytics analytics={analytics} />;
+      case 'weather':              return <WeatherPage embeddedInDashboard />;
+      case 'analytics':            return <Analytics analytics={analytics} onBack={() => setActiveTab('overview')} />;
       case 'equipment':            return <EquipmentHub />;
       case 'landRentals':          return <LandHub embeddedInDashboard />;
       case 'CropDiseasePrediction':return <CropDiseasePrediction />;
@@ -144,9 +143,9 @@ const FarmerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      <div className="farmer-sidebar w-64 bg-gradient-to-b from-green-700 to-green-900 shadow-2xl">
-        <div className="sidebar-header p-6 border-b border-green-600">
+    <div className="h-screen overflow-hidden bg-[#F6F8F1] flex">
+      <div className="farmer-sidebar w-64 flex-shrink-0 bg-gradient-to-b from-[#214E34] to-[#123321] shadow-2xl">
+        <div className="sidebar-header p-6 border-b border-white/10">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
               <span className="text-2xl">🌾</span>
@@ -156,15 +155,15 @@ const FarmerDashboard = () => {
           <p className="text-sm text-green-100 mt-2">Welcome, {user?.fullName}</p>
         </div>
 
-        <nav className="mt-4 px-3">
+        <nav className="mt-4 flex-1 overflow-y-auto px-3 pb-4">
           {sidebarItems.map((item) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
               className={`sidebar-item w-full flex items-center px-4 py-3 mb-2 text-left rounded-lg transition-all duration-200 ${
                 activeTab === item.id
-                  ? 'bg-white text-green-700 shadow-lg font-semibold'
-                  : 'text-green-50 hover:bg-green-600 hover:text-white'
+                  ? 'bg-[#F7FAF2] text-[#214E34] shadow-lg font-semibold'
+                  : 'text-green-50 hover:bg-white/10 hover:text-white'
               }`}
             >
               <span className="text-xl mr-3">{item.icon}</span>
@@ -173,20 +172,20 @@ const FarmerDashboard = () => {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 w-64 p-4 border-t border-green-600">
-          <div className="bg-green-800 rounded-lg p-3 text-center">
+        <div className="p-4 border-t border-white/10">
+          <div className="bg-white/10 rounded-lg p-3 text-center">
             <p className="text-xs text-green-200 mb-1">GreenTrace</p>
             <p className="text-xs text-green-300">Farm Management System</p>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto">
+      <div className="h-screen flex-1 overflow-y-auto">
         <div className="p-8">{renderContent()}</div>
       </div>
 
       <style>{`
-        .farmer-sidebar { position: relative; min-height: 100vh; }
+        .farmer-sidebar { height: 100vh; display: flex; flex-direction: column; }
         .sidebar-header { background: linear-gradient(135deg, rgba(46,125,50,0.1) 0%, transparent 100%); }
         .sidebar-item { position: relative; overflow: hidden; }
         .sidebar-item::before {
@@ -199,6 +198,8 @@ const FarmerDashboard = () => {
         .sidebar-item.bg-white { transform: translateX(8px); }
         @media (max-width: 768px) {
           .farmer-sidebar { width: 80px; }
+          .farmer-sidebar > div:last-of-type { padding: 0.75rem 0.5rem; }
+          .farmer-sidebar > div:last-of-type p:last-child { display: none; }
           .sidebar-item span:last-child,
           .sidebar-header h2,
           .sidebar-header p { display: none; }
@@ -223,16 +224,25 @@ const DashboardOverview = ({ analytics, transactions, equipmentTxns, setActiveTa
 
   const quickActions = [
     { label: 'Add New Product', icon: '➕', color: 'bg-green-600',  action: 'upload'    },
-    { label: 'View Products',   icon: '👁️', color: 'bg-blue-600',   action: 'products'  },
+    { label: 'View Products',   icon: '👁️', color: 'bg-blue-600',   action: 'upload'    },
     { label: 'Check Inquiries', icon: '📧', color: 'bg-purple-600', action: 'inquiries' },
     { label: 'UPI Settings',    icon: '💳', color: 'bg-yellow-500', action: 'upi'       },
   ];
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Overview</h1>
-        <p className="text-gray-600">Manage your products and track your farm business</p>
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Overview</h1>
+          <p className="text-gray-600">Manage your products and track your farm business</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setActiveTab('analytics')}
+          className="self-start rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+          Reports
+        </button>
       </div>
 
       {/* Analytics Cards */}

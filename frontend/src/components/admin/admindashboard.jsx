@@ -511,7 +511,7 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F6F8F1]">
       <style>{`@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }`}</style>
 
       {/* ── Modals ── */}
@@ -520,16 +520,16 @@ const AdminDashboard = () => {
       {suspendUser && <SuspendUserModal user={suspendUser} onClose={() => setSuspendUser(null)} onToggled={handleSuspendToggled} />}
 
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
+      <header className="bg-[#F7FAF2] border-b border-green-100 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-green-600 rounded-lg p-2">
+              <div className="bg-[#214E34] rounded-lg p-2">
                 <Activity className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">GreenTrace Admin</h1>
-                <p className="text-sm text-gray-600">Dashboard & Analytics</p>
+                <h1 className="text-2xl font-bold text-green-950">GreenTrace Admin</h1>
+                <p className="text-sm text-green-700">Dashboard & Analytics</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -543,7 +543,7 @@ const AdminDashboard = () => {
                 <option value="90days">Last 90 Days</option>
                 <option value="year">This Year</option>
               </select>
-              <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+              <button className="px-4 py-2 bg-[#214E34] text-white rounded-lg hover:bg-[#123321] transition-colors">
                 Export Report
               </button>
             </div>

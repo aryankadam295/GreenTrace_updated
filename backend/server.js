@@ -23,11 +23,27 @@ import marketPriceRoutes from "./routes/marketPriceRoutes.js";
 import assistantRoutes from "./routes/assistantRoutes.js";
 
 const app = express();
+const allowedOrigins = new Set(
+  (process.env.FRONTEND_URLS || "http://localhost:5173,http://localhost:5174")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean)
+);
+
+const isAllowedDevOrigin = (origin) =>
+  /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin || "");
 
 // Middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.has(origin) || isAllowedDevOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS blocked origin: ${origin}`));
+    },
     credentials: true,
   })
 );

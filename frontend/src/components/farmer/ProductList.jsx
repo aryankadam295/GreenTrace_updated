@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
 import { getMediaUrl } from '../../utils/media';
 
-const ProductList = () => {
+const ProductList = ({ refreshKey = 0, embedded = false }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -11,7 +11,7 @@ const ProductList = () => {
 
   useEffect(() => {
     fetchProducts();
-  }, [filter]);
+  }, [filter, refreshKey]);
 
   const fetchProducts = async () => {
     try {
@@ -74,10 +74,12 @@ const ProductList = () => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Products</h1>
-        <p className="text-gray-600">Manage your listed products</p>
-      </div>
+      {!embedded && (
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">My Products</h1>
+          <p className="text-gray-600">Manage your listed products</p>
+        </div>
+      )}
 
       {message && (
         <div className={`mb-4 p-4 rounded ${
