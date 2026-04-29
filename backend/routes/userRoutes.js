@@ -7,6 +7,7 @@ import EquipmentBooking from "../models/EquipmentBooking.js";
 import Product from "../models/Product.js";
 import Inquiry from "../models/Inquiry.js";
 import Land from "../models/Land.js";
+import { getGovernmentSchemes } from "../utils/governmentSchemesService.js";
 
 const router = express.Router();
 
@@ -180,6 +181,35 @@ router.get("/recent-activities", protect, async (req, res) => {
     res.json({ activities: activities.slice(0, 12) });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+router.get("/government-schemes", protect, async (req, res) => {
+  try {
+    if (req.user.role !== "farmer") {
+      return res.status(403).json({ message: "Only farmers can access government scheme recommendations" });
+    }
+
+    const state = req.query.state || req.user.state || "";
+    const district = req.query.district || req.user.district || "";
+    const query = req.query.q || "";
+    const category = req.query.category || "";
+    const limit = Number(req.query.limit) || 12;
+
+    const result = await getGovernmentSchemes({
+      state,
+      district,
+      query,
+      category,
+      limit: Math.min(limit, 25),
+    });
+
+    res.json({
+      ...result,
+      filters: { state, district, query, category },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message || "Failed to fetch government schemes" });
   }
 });
 

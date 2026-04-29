@@ -1,5 +1,5 @@
 import express from "express";
-import dotenv from "dotenv";
+import "dotenv/config";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
@@ -20,8 +20,7 @@ import landRoutes from "./routes/landRoutes.js";
 import merchantCommunityRoutes from "./routes/merchantCommunityRoutes.js";
 import schemeRoutes from "./routes/schemeRoutes.js";
 import marketPriceRoutes from "./routes/marketPriceRoutes.js";
-
-dotenv.config();
+import assistantRoutes from "./routes/assistantRoutes.js";
 
 const app = express();
 
@@ -33,7 +32,8 @@ app.use(
   })
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "12mb" }));
+app.use(express.urlencoded({ extended: true, limit: "12mb" }));
 app.use(cookieParser());
 
 // Test Route
@@ -55,6 +55,7 @@ app.use("/api/land", landRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/schemes", schemeRoutes);
 app.use("/api/market-prices", marketPriceRoutes);
+app.use("/api/assistant", assistantRoutes);
 
 // Static files
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));

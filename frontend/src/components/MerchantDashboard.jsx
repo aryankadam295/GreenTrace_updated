@@ -9,6 +9,7 @@ import Orders from './merchant/Orders';
 import Analytics from './merchant/Analytics';
 import Chatbox from './merchant/Chatbox';
 import MerchantCommunity from './merchant/MerchantCommunity';
+import AIAssistantWidget from './shared/AIAssistantWidget';
 import MerchantInquiries from './merchant/MerchantInquiries'; // ✅ NEW
 import MarketPrices from './MarketPrices';
 
@@ -168,6 +169,7 @@ const MerchantDashboard = () => {
           {renderContent()}
         </div>
       </div>
+      <AIAssistantWidget role="merchant" />
     </div>
   );
 };

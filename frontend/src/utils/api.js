@@ -195,6 +195,11 @@ export const chatAPI = {
   sendMessage: (chatId, data) => api.post(`/chat/${chatId}/messages`, data)
 };
 
+export const assistantAPI = {
+  chat: (data) => api.post('/assistant/chat', data),
+  transcribeAudio: (data) => api.post('/assistant/transcribe', data)
+};
+
 // Equipment API endpoints
 export const equipmentAPI = {
   // Equipment CRUD
@@ -240,4 +245,8 @@ export const marketPriceAPI = {
   getCommodities: (params) => api.get('/market-prices/commodities', { params }),
   getOptions: (params) => api.get('/market-prices/options', { params }),
   geocode: (params) => api.get('/market-prices/geocode', { params }),
+};
+
+export const farmerAPI = {
+  getGovernmentSchemes: (params) => api.get('/users/government-schemes', { params }),
 };

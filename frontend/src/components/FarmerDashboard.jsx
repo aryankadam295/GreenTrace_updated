@@ -15,6 +15,8 @@ import RecentActivities from './farmer/RecentActivities';
 import GovernmentSchemes from './farmer/GovernmentSchemes';
 import MarketPrices from './MarketPrices';
 
+import AIAssistantWidget from './shared/AIAssistantWidget';
+
 const FarmerDashboard = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -202,6 +204,7 @@ const FarmerDashboard = () => {
           .sidebar-header p { display: none; }
         }
       `}</style>
+      <AIAssistantWidget role="farmer" />
     </div>
   );
 };
