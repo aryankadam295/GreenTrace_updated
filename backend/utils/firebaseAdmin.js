@@ -3,7 +3,11 @@ import { getAuth } from "firebase-admin/auth";
 
 const defaultProjectId = process.env.FIREBASE_PROJECT_ID || "project-647428543613";
 
-const formatPrivateKey = (value) => value?.replace(/\\n/g, "\n");
+const formatPrivateKey = (value) =>
+  value
+    ?.replace(/^["']|["']$/g, "")
+    .replace(/\\n/g, "\n")
+    .trim();
 
 const parseServiceAccount = () => {
   if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {

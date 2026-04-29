@@ -13,9 +13,11 @@ import FarmerDashboard from './components/FarmerDashboard';
 import MerchantDashboard from './components/MerchantDashboard';
 import AdminDashboard from './components/admin/admindashboard';
 import AboutUs from './components/Aboutus';
+import Contact from './components/Contact';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import Profile from './components/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import AccessDenied from './components/AccessDenied';
-import WeatherPage from './components/farmer/WeatherPage';
 
 // Land Verification Components
 import LandVerification from './components/admin/LandVerification';
@@ -34,6 +36,16 @@ function App() {
           <Route path="/for-merchants" element={<ForMerchants />} />
           <Route path="/for-admin" element={<ForAdmin />} />
           <Route path="/about" element={<AboutUs />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute allowedRoles={['farmer', 'merchant', 'admin']}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/land-feed"
             element={
@@ -82,7 +94,7 @@ function App() {
             path="/farmer-weather"
             element={
               <ProtectedRoute allowedRoles={['farmer']}>
-                <WeatherPage />
+                <Navigate to="/farmer-dashboard?section=weather" replace />
               </ProtectedRoute>
             }
           />

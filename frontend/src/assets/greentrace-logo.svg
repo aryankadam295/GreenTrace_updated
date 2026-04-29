@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title>GreenTrace Logo</title>
+  <circle cx="48" cy="45" r="31" fill="none" stroke="#0f5f4d" stroke-width="4" stroke-linecap="round" stroke-dasharray="3 8"/>
+  <path d="M48 14C38 27 33 38 36 49c2 8 7 13 12 17V14Z" fill="#078b72"/>
+  <path d="M48 14c10 13 15 24 12 35-2 8-7 13-12 17V14Z" fill="#79c394"/>
+  <path d="M31 50c13 0 23 7 25 24-15 0-27-8-30-23 2-.6 3.6-1 5-1Z" fill="#6cae36"/>
+  <path d="M65 50c-13 0-23 7-25 24 15 0 27-8 30-23-2-.6-3.6-1-5-1Z" fill="#5fa389"/>
+  <path d="M48 31v43M34 57c8 2 13 9 14 17M62 57c-8 2-13 9-14 17" fill="none" stroke="#f7faf2" stroke-width="4" stroke-linecap="round"/>
+  <path d="M48 75v9" stroke="#0f5f4d" stroke-width="4" stroke-linecap="round"/>
+  <rect x="39.5" y="80.5" width="17" height="17" rx="3" transform="rotate(45 48 89)" fill="#f7faf2" stroke="#0f5f4d" stroke-width="4"/>
+</svg>

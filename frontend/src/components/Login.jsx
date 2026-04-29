@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../firebaseConfig';
+import { getGoogleAuthErrorMessage } from '../utils/googleAuthError';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -127,7 +128,7 @@ const Login = () => {
       redirectAfterAuth(response.user);
     } catch (error) {
       console.error('Google login error:', error);
-      const errorMessage = error.response?.data?.message || 'Google login failed. Please try again.';
+      const errorMessage = getGoogleAuthErrorMessage(error, 'Google login failed. Please try again.');
       setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);

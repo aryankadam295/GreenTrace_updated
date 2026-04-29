@@ -96,13 +96,13 @@ const MerchantDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-[#F6F8F1] flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg flex flex-col">
-        <div className="p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-800">Merchant Dashboard</h2>
-          <p className="text-sm text-gray-600">Welcome, {user?.fullName}</p>
-          <p className="text-xs text-green-600">{user?.businessName}</p>
+      <div className="w-64 bg-gradient-to-b from-[#214E34] to-[#123321] shadow-2xl flex flex-col">
+        <div className="p-6 border-b border-white/10">
+          <h2 className="text-xl font-bold text-white">Merchant Dashboard</h2>
+          <p className="text-sm text-green-100">Welcome, {user?.fullName}</p>
+          <p className="text-xs text-green-200">{user?.businessName}</p>
         </div>
 
         <nav className="mt-6 flex-1">
@@ -110,10 +110,10 @@ const MerchantDashboard = () => {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center px-6 py-3 text-left hover:bg-green-50 transition-colors ${
+              className={`w-full flex items-center px-6 py-3 text-left transition-colors ${
                 activeTab === item.id
-                  ? 'bg-green-100 border-r-4 border-green-600 text-green-700'
-                  : 'text-gray-700'
+                  ? 'bg-[#F7FAF2] border-r-4 border-lime-300 text-[#214E34] font-semibold'
+                  : 'text-green-50 hover:bg-white/10 hover:text-white'
               }`}
             >
               <span className="text-xl mr-3">{item.icon}</span>
@@ -143,20 +143,20 @@ const MerchantDashboard = () => {
 
         {/* Quick Stats */}
         {analytics && (
-          <div className="p-6 border-t">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">Quick Stats</h3>
+          <div className="p-6 border-t border-white/10">
+            <h3 className="text-sm font-semibold text-green-100 mb-3">Quick Stats</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Total Orders:</span>
-                <span className="font-medium">{analytics.totalOrders}</span>
+                <span className="text-green-100">Total Orders:</span>
+                <span className="font-medium text-white">{analytics.totalOrders}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Total Spent:</span>
-                <span className="font-medium text-green-600">₹{analytics.totalSpent}</span>
+                <span className="text-green-100">Total Spent:</span>
+                <span className="font-medium text-lime-200">₹{analytics.totalSpent}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Pending Orders:</span>
-                <span className="font-medium text-yellow-600">{analytics.pendingOrders}</span>
+                <span className="text-green-100">Pending Orders:</span>
+                <span className="font-medium text-amber-200">{analytics.pendingOrders}</span>
               </div>
             </div>
           </div>

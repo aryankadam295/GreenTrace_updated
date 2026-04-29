@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
 import api from '../../utils/api';
+import ProductList from './ProductList';
 
-const ProductUpload = ({ onSuccess }) => {
+const ProductUpload = ({ onSuccess, showProducts = false, productRefreshKey = 0 }) => {
+  const [activeView, setActiveView] = useState('upload');
   const [formData, setFormData] = useState({
     productName: '',
     category: '',
@@ -140,11 +142,32 @@ const ProductUpload = ({ onSuccess }) => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Upload New Product</h1>
-        <p className="text-gray-600">Add your agricultural products to the marketplace</p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {activeView === 'products' ? 'My Products' : 'Upload New Product'}
+          </h1>
+          <p className="text-gray-600">
+            {activeView === 'products'
+              ? 'Manage products you have already uploaded.'
+              : 'Add your agricultural products to the marketplace'}
+          </p>
+        </div>
+
+        {showProducts && (
+          <button
+            type="button"
+            onClick={() => setActiveView(activeView === 'products' ? 'upload' : 'products')}
+            className="self-start rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            {activeView === 'products' ? 'Upload Product' : 'My Products'}
+          </button>
+        )}
       </div>
 
+      {activeView === 'products' && showProducts ? (
+        <ProductList embedded refreshKey={productRefreshKey} />
+      ) : (
       <div className="bg-white rounded-lg shadow p-6">
         {message && (
           <div className={`mb-4 p-4 rounded ${
@@ -383,6 +406,7 @@ const ProductUpload = ({ onSuccess }) => {
           </div>
         </form>
       </div>
+      )}
     </div>
   );
 };

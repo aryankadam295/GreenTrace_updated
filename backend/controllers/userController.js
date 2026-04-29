@@ -194,7 +194,21 @@ export const googleAuthUser = async (req, res) => {
       return res.status(400).json({ message: "Google ID token is required" });
     }
 
-    const decodedToken = await verifyFirebaseIdToken(idToken);
+    let decodedToken;
+    try {
+      decodedToken = await verifyFirebaseIdToken(idToken);
+    } catch (verifyError) {
+      console.error("Firebase token verification failed:", verifyError.code || verifyError.message);
+      const isConfigError =
+        verifyError.message?.includes("Firebase Admin is not configured") ||
+        verifyError.message?.includes("Failed to parse private key");
+
+      return res.status(isConfigError ? 500 : 401).json({
+        message: isConfigError
+          ? "Google authentication is not configured correctly on the server."
+          : "Google sign-in token could not be verified. Please try signing in again.",
+      });
+    }
     const googleEmail = decodedToken.email?.toLowerCase().trim();
 
     if (!googleEmail) {

@@ -1,33 +1,37 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import LanguageSelector from "./LanguageSelector";
+import greentraceLogo from "../assets/greentrace-logo.svg";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
+  const toggleProfile = () => setIsProfileOpen((prev) => !prev);
 
   const handleLogout = async () => {
     try {
       await logout();
+      setIsProfileOpen(false);
     } catch (error) {
       console.error('Logout error:', error);
     }
   };
 
   return (
-    <nav className="text-green-900 shadow-md" style={{backgroundColor: '#F1F8F4'}}>
+    <nav className="border-b border-green-100 bg-[#F7FAF2] text-green-950 shadow-sm">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* Left Side - Logo / Brand */}
-        <Link to="/" className="text-2xl font-bold">
+        <Link to="/" className="flex items-center gap-2 text-2xl font-bold">
+          <img src={greentraceLogo} alt="GreenTrace logo" className="h-10 w-10" />
           GreenTrace
         </Link>
 
         {/* Right Side - Menu */}
-        <div className="hidden md:flex space-x-6 items-center">
+        <div className="hidden md:flex flex-1 items-center justify-end gap-6">
           {!isAuthenticated ? (
             <>
               <Link to="/" className="hover:text-green-700 transition">
@@ -48,14 +52,17 @@ const Navbar = () => {
               {/* Role-specific navigation */}
               {user?.role === 'farmer' && (
                 <>
-                  <Link to="/farmer-dashboard" className="hover:text-green-700 transition">
+                  <Link to="/farmer-dashboard?section=overview" className="hover:text-green-700 transition">
                     Dashboard
                   </Link>
-                  <Link to="/farmer-dashboard" className="hover:text-green-700 transition">
-                    My Products
-                  </Link>
-                  <Link to="/farmer-dashboard" className="hover:text-green-700 transition">
+                  <Link to="/farmer-dashboard?section=inquiries" className="hover:text-green-700 transition">
                     Inquiries
+                  </Link>
+                  <Link to="/farmer-dashboard?section=chat" className="hover:text-green-700 transition">
+                    Chat
+                  </Link>
+                  <Link to="/farmer-dashboard?section=weather" className="hover:text-green-700 transition">
+                    Weather Forecast
                   </Link>
                 </>
               )}
@@ -91,46 +98,60 @@ const Navbar = () => {
                 </>
               )}
 
+              <LanguageSelector />
 
-              {user?.role === 'farmer' && (
+              <div className="relative">
                 <button
                   type="button"
-                  onClick={() => navigate('/farmer-weather')}
-                  title="Weather Forecast"
-                  aria-label="Open weather forecast"
-                  className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-green-100 transition"
+                  onClick={toggleProfile}
+                  className="flex items-center gap-2 rounded-full border border-green-100 bg-white px-2.5 py-1.5 font-medium text-green-950 shadow-sm transition hover:border-green-300 hover:bg-green-50"
+                  aria-expanded={isProfileOpen}
+                  aria-label="Open profile menu"
                 >
-                  <svg
-                    className="w-5 h-5 text-green-700"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M3 15a4 4 0 014-4h1a6 6 0 1111.96 1.5A3.5 3.5 0 0119.5 19H7a4 4 0 01-4-4zm13-8h.01M12 5h.01M8 7h.01"
-                    />
-                  </svg>
-                  <span className="text-sm font-medium text-green-800">Weather Forecast</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-700 text-sm font-bold text-white">
+                    {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
+                  <span className="max-w-32 truncate">{user?.fullName}</span>
                 </button>
-              )}
 
-              <span className="text-green-900 font-medium">
-                Welcome, {user?.fullName} ({user?.role})
-              </span>
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition"
-              >
-                Logout
-              </button>
+                {isProfileOpen && (
+                  <div className="absolute right-0 top-12 z-50 w-64 overflow-hidden rounded-lg border border-green-100 bg-white shadow-xl">
+                    <div className="border-b border-green-100 bg-[#F7FAF2] px-4 py-3">
+                      <p className="font-semibold text-green-950">{user?.fullName}</p>
+                      <p className="text-sm capitalize text-green-700">{user?.role}</p>
+                      {user?.businessName && <p className="text-xs text-gray-500">{user.businessName}</p>}
+                    </div>
+                    <div className="py-2">
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-green-50 hover:text-green-800"
+                      >
+                        Profile
+                      </Link>
+                      {user?.role === 'farmer' && (
+                        <Link
+                          to="/profile?section=upi"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="block px-4 py-2 text-sm text-gray-700 transition hover:bg-green-50 hover:text-green-800"
+                        >
+                          UPI Settings
+                        </Link>
+                      )}
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-700 transition hover:bg-red-50"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </>
           )}
 
-          <LanguageSelector />
+          {!isAuthenticated && <LanguageSelector />}
 
           {!isAuthenticated && (
             <>
@@ -183,7 +204,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden px-6 pb-4 space-y-2 text-green-900" style={{backgroundColor: '#F1F8F4'}}>
+        <div className="md:hidden border-t border-green-100 bg-[#F7FAF2] px-6 pb-4 space-y-2 text-green-950">
           {!isAuthenticated ? (
             <>
               <Link to="/" className="block hover:text-green-700 transition">
@@ -204,14 +225,17 @@ const Navbar = () => {
               {/* Role-specific mobile navigation */}
               {user?.role === 'farmer' && (
                 <>
-                  <Link to="/farmer-dashboard" className="block hover:text-green-700 transition">
+                  <Link to="/farmer-dashboard?section=overview" className="block hover:text-green-700 transition">
                     Dashboard
                   </Link>
-                  <Link to="/farmer-dashboard" className="block hover:text-green-700 transition">
-                    My Products
-                  </Link>
-                  <Link to="/farmer-dashboard" className="block hover:text-green-700 transition">
+                  <Link to="/farmer-dashboard?section=inquiries" className="block hover:text-green-700 transition">
                     Inquiries
+                  </Link>
+                  <Link to="/farmer-dashboard?section=chat" className="block hover:text-green-700 transition">
+                    Chat
+                  </Link>
+                  <Link to="/farmer-dashboard?section=weather" className="block hover:text-green-700 transition">
+                    Weather Forecast
                   </Link>
                 </>
               )}
@@ -247,19 +271,33 @@ const Navbar = () => {
                 </>
               )}
 
-
-              {user?.role === 'farmer' && (
-                <Link to="/farmer-weather" className="block hover:text-green-700 transition">
-                  Weather Forecast
+              <div className="rounded-lg border border-green-100 bg-white p-3">
+                <span className="flex items-center gap-2 text-green-950 font-medium mb-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-green-700 text-sm font-bold text-white">
+                    {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
+                  <span>{user?.fullName}</span>
+                </span>
+                <Link
+                  to="/profile"
+                  onClick={() => setIsOpen(false)}
+                  className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800"
+                >
+                  Profile
                 </Link>
-              )}
-
-              <span className="block text-green-900 font-medium mb-2">
-                Welcome, {user?.fullName} ({user?.role})
-              </span>
+                {user?.role === 'farmer' && (
+                  <Link
+                    to="/profile?section=upi"
+                    onClick={() => setIsOpen(false)}
+                    className="block rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800"
+                  >
+                    UPI Settings
+                  </Link>
+                )}
+              </div>
               <button
                 onClick={handleLogout}
-                className="block bg-red-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-red-700 transition w-full text-left"
+                className="block border border-red-200 bg-red-50 text-red-700 font-semibold px-4 py-2 rounded-md hover:bg-red-100 transition w-full text-left"
               >
                 Logout
               </button>

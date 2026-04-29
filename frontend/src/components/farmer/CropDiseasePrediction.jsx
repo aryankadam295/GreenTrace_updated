@@ -202,10 +202,10 @@ const CropDiseasePrediction = () => {
       margin: '0 auto'
     },
     contentWrapper: {
-      maxWidth: '1400px',
+      maxWidth: result ? '1400px' : '720px',
       margin: '0 auto',
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
+      gridTemplateColumns: result ? '1fr 1fr' : '1fr',
       gap: '2rem',
       alignItems: 'start',
       position: 'relative',

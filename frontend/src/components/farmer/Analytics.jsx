@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Analytics = ({ analytics }) => {
+const Analytics = ({ analytics, onBack }) => {
   if (!analytics) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -67,9 +67,20 @@ const Analytics = ({ analytics }) => {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics & Reports</h1>
-        <p className="text-gray-600">Track your farm business performance</p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics & Reports</h1>
+          <p className="text-gray-600">Track your farm business performance</p>
+        </div>
+        {onBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="self-start rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-500"
+          >
+            Back to Overview
+          </button>
+        )}
       </div>
 
       {/* Key Metrics Grid */}
