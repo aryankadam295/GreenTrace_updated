@@ -23,7 +23,7 @@ const Navbar = () => {
 
   return (
     <nav className="border-b border-green-100 bg-[#F7FAF2] text-green-950 shadow-sm">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <div className="w-full px-6 py-4 flex justify-between items-center">
         {/* Left Side - Logo / Brand */}
         <Link to="/" className="flex items-center gap-2 text-2xl font-bold">
           <img src={greentraceLogo} alt="GreenTrace logo" className="h-10 w-10" />
@@ -31,7 +31,7 @@ const Navbar = () => {
         </Link>
 
         {/* Right Side - Menu */}
-        <div className="hidden md:flex flex-1 items-center justify-end gap-6">
+        <div className="hidden md:flex flex-1 items-center justify-end gap-8 pr-6">
           {!isAuthenticated ? (
             <>
               <Link to="/" className="hover:text-green-700 transition">
