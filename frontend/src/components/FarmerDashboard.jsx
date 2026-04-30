@@ -77,6 +77,8 @@ const FarmerDashboard = () => {
   const sidebarItems = [
     { id: 'overview',              label: 'Overview',               icon: '📊' },
     { id: 'upload',                label: 'Upload Product',          icon: '📦' },
+    { id: 'inquiries',             label: 'Inquiries',              icon: '📨' },
+    { id: 'chat',                  label: 'Chat',                   icon: '💬' },
     { id: 'CropDiseasePrediction', label: 'Crop Disease Prediction', icon: '🔬' },
     { id: 'equipment',             label: 'Equipment Hub',           icon: '🚜' },
     { id: 'landRentals',           label: 'Land Rentals',            icon: '🏞️' },

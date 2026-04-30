@@ -134,7 +134,7 @@ const Chatbox = () => {
                         {otherParticipant?.fullName || 'Farmer'}
                       </p>
                       <p className="text-xs text-gray-500 truncate">
-                        {chat.product?.name || 'Product'}
+                        {chat.product?.productName || 'Product'}
                       </p>
                       {chat.lastMessage && (
                         <p className="text-xs text-gray-600 truncate mt-1">
@@ -172,7 +172,7 @@ const Chatbox = () => {
                     {getOtherParticipant(selectedChat)?.fullName || 'Farmer'}
                   </h3>
                   <p className="text-xs text-gray-500">
-                    {selectedChat.product?.name || 'Product'}
+                    {selectedChat.product?.productName || 'Product'}
                   </p>
                 </div>
               </div>

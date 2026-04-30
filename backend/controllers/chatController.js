@@ -13,7 +13,7 @@ const getUserChats = async (req, res) => {
       participants: userId
     })
     .populate('participants', 'fullName role businessName')
-    .populate('product', 'name images price')
+    .populate('product', 'productName images price farmerId')
     .populate('lastMessage.sender', 'fullName')
     .sort({ 'lastMessage.timestamp': -1 });
 
@@ -22,7 +22,10 @@ const getUserChats = async (req, res) => {
 
     if (userRole === 'farmer') {
       // Farmers can only see chats for their own products
-      filteredChats = chats.filter(chat => chat.product.farmer.toString() === userId);
+      filteredChats = chats.filter((chat) => {
+        const ownerId = chat?.product?.farmerId?._id || chat?.product?.farmerId;
+        return ownerId && ownerId.toString() === userId;
+      });
     } else if (userRole === 'merchant') {
       // Merchants can see chats for products they've inquired about
       // This will be filtered based on inquiries later
@@ -52,7 +55,7 @@ const getChatMessages = async (req, res) => {
       participants: userId
     })
     .populate('participants', 'fullName role businessName')
-    .populate('product', 'name images price farmer')
+    .populate('product', 'productName images price farmerId')
     .populate('messages.sender', 'fullName role');
 
     if (!chat) {
@@ -204,7 +207,7 @@ const createChat = async (req, res) => {
 
     // Populate for response
     await newChat.populate('participants', 'fullName role businessName');
-    await newChat.populate('product', 'name images price');
+    await newChat.populate('product', 'productName images price farmerId');
     await newChat.populate('messages.sender', 'fullName role');
 
     res.status(201).json({
