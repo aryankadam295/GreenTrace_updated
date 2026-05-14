@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Upload, Loader, AlertCircle, Info, Leaf, Activity, Eye, TrendingUp, Video } from 'lucide-react';
 
 const CropDiseasePrediction = () => {
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://greentrace-updated.onrender.com';
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedVideo, setSelectedVideo] = useState(null);
