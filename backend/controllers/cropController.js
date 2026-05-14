@@ -2,7 +2,7 @@ import axios from "axios";
 import fs from "fs";
 import FormData from "form-data";
 
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || "http://127.0.0.1:5001, https://greentrace-updated-1.onrender.com";
+const ML_SERVICE_URL = "https://greentrace-updated-1.onrender.com";
 
 const forwardPrediction = async (req, res, fieldName, endpointPath) => {
   try {
