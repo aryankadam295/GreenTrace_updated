@@ -3,7 +3,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
-import { Users, TrendingUp, DollarSign, Activity, UserCheck, Briefcase, X, AlertTriangle } from 'lucide-react';
+import { Users, TrendingUp, DollarSign, Activity, UserCheck, Briefcase, X, AlertTriangle, Bell } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
@@ -390,6 +390,8 @@ const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [alertCount, setAlertCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Modal state
   const [viewUser, setViewUser]       = useState(null);
@@ -420,6 +422,12 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, [isAuthenticated, user, navigate]);
 
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'admin') return;
+    const intervalId = setInterval(fetchDashboardData, 60000);
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated, user]);
+
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
@@ -437,6 +445,7 @@ const AdminDashboard = () => {
       setTopFarmers(performers.data.topFarmers);
       setTopMerchants(performers.data.topMerchants);
       setRecentActivities(activities.data.activities);
+      setAlertCount((activities.data.activities || []).length);
       setRecentTransactions(transactions.data.transactions);
       setAllUsers(users.data.users);
     } catch (error) {
@@ -533,6 +542,45 @@ const AdminDashboard = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowNotifications((prev) => !prev)}
+                  className="relative rounded-lg border border-green-200 bg-white p-2 text-green-800 hover:bg-green-50"
+                  title="View notifications"
+                >
+                  <Bell className="h-5 w-5" />
+                  {alertCount > 0 && (
+                    <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-bold text-white">
+                      {alertCount > 99 ? '99+' : alertCount}
+                    </span>
+                  )}
+                </button>
+                {showNotifications && (
+                  <div className="absolute right-0 z-20 mt-2 w-80 rounded-lg border border-green-100 bg-white p-3 shadow-lg">
+                    <p className="mb-2 text-sm font-semibold text-gray-900">Notifications</p>
+                    <button onClick={() => { setActiveTab('activities'); setShowNotifications(false); }} className="mb-2 flex w-full items-center justify-between rounded-md bg-green-50 px-3 py-2 text-left text-sm text-green-800 hover:bg-green-100">
+                      <span>Recent platform activities</span>
+                      <span className="font-semibold">{recentActivities.length}</span>
+                    </button>
+                    <button onClick={() => { setActiveTab('transactions'); setShowNotifications(false); }} className="mb-2 flex w-full items-center justify-between rounded-md bg-blue-50 px-3 py-2 text-left text-sm text-blue-800 hover:bg-blue-100">
+                      <span>Total transactions</span>
+                      <span className="font-semibold">{dashboardData.totalTransactions || 0}</span>
+                    </button>
+                    <button onClick={() => { setActiveTab('users'); setShowNotifications(false); }} className="flex w-full items-center justify-between rounded-md bg-purple-50 px-3 py-2 text-left text-sm text-purple-800 hover:bg-purple-100">
+                      <span>New users this month</span>
+                      <span className="font-semibold">{dashboardData.newUsersThisMonth || 0}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 rounded-full border border-green-100 bg-white px-3 py-1.5 shadow-sm">
+                <span className="text-base">👤</span>
+                <div className="text-right">
+                  <p className="text-xs font-semibold text-gray-800">{user?.fullName}</p>
+                  <p className="text-[11px] text-gray-500">Admin</p>
+                </div>
+              </div>
               <select
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
