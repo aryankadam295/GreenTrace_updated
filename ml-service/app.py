@@ -312,10 +312,5 @@ def predict_video():
 
 # ---------------- RUN SERVER ----------------
 if __name__ == "__main__":
-    print("ML service starting on http://localhost:5001")
-    serve(
-        app,
-        host="0.0.0.0",
-        port=5001,
-        max_request_body_size=50 * 1024 * 1024,
-    )
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host="0.0.0.0", port=port)
