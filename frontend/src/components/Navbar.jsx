@@ -1,16 +1,83 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import LanguageSelector from "./LanguageSelector";
 import greentraceLogo from "../assets/greentrace-logo.svg";
+import api, { chatAPI, equipmentAPI } from "../utils/api";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [notificationCounts, setNotificationCounts] = useState({
+    chat: 0,
+    equipment: 0,
+    inquiries: 0,
+    adminActivities: 0,
+  });
   const { user, isAuthenticated, logout } = useAuth();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const toggleProfile = () => setIsProfileOpen((prev) => !prev);
+  const toggleNotifications = () => setIsNotificationOpen((prev) => !prev);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.role) return;
+
+    const fetchNotificationCounts = async () => {
+      try {
+        if (user.role === "farmer") {
+          const [chatRes, equipmentRes] = await Promise.all([
+            chatAPI.getUnreadCount(),
+            equipmentAPI.getUnreadCount(),
+          ]);
+          setNotificationCounts({
+            chat: Number(chatRes?.data?.unreadCount || 0),
+            equipment: Number(equipmentRes?.data?.unreadCount || 0),
+            inquiries: 0,
+            adminActivities: 0,
+          });
+          return;
+        }
+
+        if (user.role === "merchant") {
+          const [chatRes, inquiryRes] = await Promise.all([
+            chatAPI.getUnreadCount(),
+            api.get("/inquiries/merchant?status=responded&limit=1"),
+          ]);
+          setNotificationCounts({
+            chat: Number(chatRes?.data?.unreadCount || 0),
+            equipment: 0,
+            inquiries: Number(inquiryRes?.data?.total || 0),
+            adminActivities: 0,
+          });
+          return;
+        }
+
+        if (user.role === "admin") {
+          const activitiesRes = await api.get("/admin/activities");
+          setNotificationCounts({
+            chat: 0,
+            equipment: 0,
+            inquiries: 0,
+            adminActivities: Number(activitiesRes?.data?.activities?.length || 0),
+          });
+        }
+      } catch {
+        setNotificationCounts({ chat: 0, equipment: 0, inquiries: 0, adminActivities: 0 });
+      }
+    };
+
+    fetchNotificationCounts();
+    const intervalId = setInterval(fetchNotificationCounts, 30000);
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated, user?.role]);
+
+  const totalNotifications =
+    notificationCounts.chat +
+    notificationCounts.equipment +
+    notificationCounts.inquiries +
+    notificationCounts.adminActivities;
 
   const handleLogout = async () => {
     try {
@@ -99,6 +166,63 @@ const Navbar = () => {
               )}
 
               <LanguageSelector />
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={toggleNotifications}
+                  className="relative rounded-full border border-green-100 bg-white px-3 py-2 text-green-900 shadow-sm transition hover:border-green-300 hover:bg-green-50"
+                  aria-expanded={isNotificationOpen}
+                  aria-label="Open notifications"
+                >
+                  <span className="text-base">🔔</span>
+                  {totalNotifications > 0 && (
+                    <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-red-500 px-1 text-center text-[10px] font-bold text-white">
+                      {totalNotifications > 99 ? "99+" : totalNotifications}
+                    </span>
+                  )}
+                </button>
+
+                {isNotificationOpen && (
+                  <div className="absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-lg border border-green-100 bg-white shadow-xl">
+                    <div className="border-b border-green-100 bg-[#F7FAF2] px-4 py-3">
+                      <p className="font-semibold text-green-950">Notifications</p>
+                    </div>
+                    <div className="py-2">
+                      {user?.role === "farmer" && (
+                        <>
+                          <Link to="/farmer-dashboard?section=chat" onClick={() => setIsNotificationOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 transition hover:bg-green-50 hover:text-green-800">
+                            <span>Marketplace chat messages</span>
+                            <span className="font-semibold">{notificationCounts.chat}</span>
+                          </Link>
+                          <Link to="/farmer-dashboard?section=equipment" onClick={() => setIsNotificationOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 transition hover:bg-green-50 hover:text-green-800">
+                            <span>Equipment chat messages</span>
+                            <span className="font-semibold">{notificationCounts.equipment}</span>
+                          </Link>
+                        </>
+                      )}
+                      {user?.role === "merchant" && (
+                        <>
+                          <Link to="/merchant-dashboard" onClick={() => setIsNotificationOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 transition hover:bg-green-50 hover:text-green-800">
+                            <span>New chat messages</span>
+                            <span className="font-semibold">{notificationCounts.chat}</span>
+                          </Link>
+                          <Link to="/merchant-dashboard" onClick={() => setIsNotificationOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 transition hover:bg-green-50 hover:text-green-800">
+                            <span>Farmer inquiry replies</span>
+                            <span className="font-semibold">{notificationCounts.inquiries}</span>
+                          </Link>
+                        </>
+                      )}
+                      {user?.role === "admin" && (
+                        <Link to="/admin-dashboard" onClick={() => setIsNotificationOpen(false)} className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 transition hover:bg-green-50 hover:text-green-800">
+                          <span>Recent platform activities</span>
+                          <span className="font-semibold">{notificationCounts.adminActivities}</span>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="relative">
                 <button

@@ -14,6 +14,7 @@ import RecentActivities from './farmer/RecentActivities';
 import GovernmentSchemes from './farmer/GovernmentSchemes';
 import MarketPrices from './MarketPrices';
 import WeatherPage from './farmer/WeatherPage';
+import { chatAPI, equipmentAPI } from '../utils/api';
 
 import AIAssistantWidget from './shared/AIAssistantWidget';
 
@@ -28,6 +29,7 @@ const FarmerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activityRefresh, setActivityRefresh] = useState(0);
   const [productRefresh, setProductRefresh] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
  
 
   useEffect(() => {
@@ -38,6 +40,14 @@ const FarmerDashboard = () => {
     }
     Promise.all([fetchAnalytics(), fetchSuccessfulTransactions(), fetchEquipmentIncome()]);
   }, [isAuthenticated, user, navigate]);
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.role !== 'farmer') return;
+
+    fetchUnreadMessages();
+    const intervalId = setInterval(fetchUnreadMessages, 30000);
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     const section = new URLSearchParams(location.search).get('section');
@@ -71,6 +81,22 @@ const FarmerDashboard = () => {
       setEquipmentTxns(response.data.transactions || []);
     } catch (error) {
       console.error('Error fetching equipment income:', error);
+    }
+  };
+
+  const fetchUnreadMessages = async () => {
+    try {
+      const [marketplaceChats, equipmentChats] = await Promise.all([
+        chatAPI.getUnreadCount(),
+        equipmentAPI.getUnreadCount(),
+      ]);
+      const marketplaceUnread = Number(marketplaceChats?.data?.unreadCount || 0);
+      const equipmentUnread = Number(equipmentChats?.data?.unreadCount || 0);
+      const totalUnread =
+        marketplaceUnread + equipmentUnread;
+      setUnreadMessages(totalUnread);
+    } catch {
+      setUnreadMessages(0);
     }
   };
 
@@ -148,11 +174,13 @@ const FarmerDashboard = () => {
     <div className="h-screen overflow-hidden bg-[#F6F8F1] flex">
       <div className="farmer-sidebar w-64 flex-shrink-0 bg-gradient-to-b from-[#214E34] to-[#123321] shadow-2xl">
         <div className="sidebar-header p-6 border-b border-white/10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-              <span className="text-2xl">🌾</span>
+          <div className="flex items-center justify-between gap-3 mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                <span className="text-2xl">🌾</span>
+              </div>
+              <h2 className="text-xl font-bold text-white">Farmer Portal</h2>
             </div>
-            <h2 className="text-xl font-bold text-white">Farmer Portal</h2>
           </div>
           <p className="text-sm text-green-100 mt-2">Welcome, {user?.fullName}</p>
         </div>
@@ -170,6 +198,11 @@ const FarmerDashboard = () => {
             >
               <span className="text-xl mr-3">{item.icon}</span>
               <span className="text-sm">{item.label}</span>
+              {item.id === 'chat' && unreadMessages > 0 && (
+                <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
+                  {unreadMessages > 99 ? '99+' : unreadMessages}
+                </span>
+              )}
             </button>
           ))}
         </nav>
