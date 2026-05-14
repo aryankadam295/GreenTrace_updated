@@ -24,7 +24,7 @@ import assistantRoutes from "./routes/assistantRoutes.js";
 
 const app = express();
 const allowedOrigins = new Set(
-  (process.env.FRONTEND_URLS || "http://localhost:5173,http://localhost:5174")
+  (process.env.FRONTEND_URLS || "http://localhost:5173,http://localhost:5174,https://green-trace-updated.vercel.app")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean)
