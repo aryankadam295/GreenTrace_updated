@@ -553,10 +553,7 @@ export default function WeatherPage() {
     return [];
   };
 
-  useEffect(() => {
-    const t = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
+  // Keep displayed time fixed (no 1s interval) so the UI doesn't appear to be continuously updating.
 
   useEffect(() => {
     const fetchStates = async () => {

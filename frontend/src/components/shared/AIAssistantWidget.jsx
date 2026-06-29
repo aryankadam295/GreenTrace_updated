@@ -19,7 +19,7 @@ const AIAssistantWidget = ({ role = 'farmer' }) => {
   const audioChunksRef = useRef([]);
   const recordingTimeoutRef = useRef(null);
   const transcriptRef = useRef('');
-
+  
   const assistantName = useMemo(
     () => (role === 'merchant' ? 'VyaparMitra' : 'KrushiMitra'),
     [role]
@@ -388,14 +388,111 @@ const AIAssistantWidget = ({ role = 'farmer' }) => {
     recognition.start();
   };
 
+  const [widgetPos, setWidgetPos] = useState(() => {
+    const innerW = typeof window !== 'undefined' ? window.innerWidth : 0;
+    const innerH = typeof window !== 'undefined' ? window.innerHeight : 0;
+
+    return {
+      // start near right side like current design
+      x: innerW ? innerW - 80 : 24,
+      y: innerH ? innerH / 2 : 200,
+    };
+  });
+
+  const dragStateRef = useRef({
+    dragging: false,
+    startX: 0,
+    startY: 0,
+    originX: 0,
+    originY: 0,
+  });
+
+  const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+
+  const onDragStart = (clientX, clientY) => {
+    dragStateRef.current.dragging = true;
+    dragStateRef.current.startX = clientX;
+    dragStateRef.current.startY = clientY;
+    dragStateRef.current.originX = widgetPos.x;
+    dragStateRef.current.originY = widgetPos.y;
+  };
+
+  const onDragMove = (clientX, clientY) => {
+    if (!dragStateRef.current.dragging) return;
+    const dx = clientX - dragStateRef.current.startX;
+    const dy = clientY - dragStateRef.current.startY;
+
+    const buttonW = 80; // approximate launcher width
+    const minX = 8;
+
+    const innerW = typeof window !== 'undefined' ? window.innerWidth : 0;
+    const innerH = typeof window !== 'undefined' ? window.innerHeight : 0;
+
+    const maxX = innerW - buttonW - 8;
+
+    const minY = 8;
+    const maxY = innerH - 8;
+
+    setWidgetPos({
+      x: clamp(dragStateRef.current.originX + dx, minX, maxX),
+      y: clamp(dragStateRef.current.originY + dy, minY, maxY),
+    });
+  };
+
+  const endDrag = () => {
+    dragStateRef.current.dragging = false;
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e) => onDragMove(e.clientX, e.clientY);
+    const handleMouseUp = () => endDrag();
+
+    const handleTouchMove = (e) => {
+      const t = e.touches?.[0];
+      if (!t) return;
+      onDragMove(t.clientX, t.clientY);
+    };
+    const handleTouchEnd = () => endDrag();
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [widgetPos.x, widgetPos.y]);
+
+  const panelStyle = (() => {
+    const innerW = typeof window !== 'undefined' ? window.innerWidth : 0;
+    const innerH = typeof window !== 'undefined' ? window.innerHeight : 0;
+
+    const left = clamp(widgetPos.x - 420, 8, innerW - 420 - 8);
+    const top = clamp(widgetPos.y - 280, 8, innerH - 560 - 8);
+
+    return { left, top };
+  })();
+
   return (
     <>
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="fixed right-5 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-2"
+        className="fixed z-50 flex flex-col items-center gap-2 select-none"
+        style={{ left: widgetPos.x, top: widgetPos.y, transform: 'translate(-0%, -50%)' }}
         aria-label={`Open ${assistantName}`}
         title={assistantName}
+        onMouseDown={(e) => onDragStart(e.clientX, e.clientY)}
+        onTouchStart={(e) => {
+          const t = e.touches?.[0];
+          if (!t) return;
+          onDragStart(t.clientX, t.clientY);
+        }}
       >
         <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-green-600 to-emerald-700 text-white shadow-xl transition-all duration-200 hover:shadow-2xl">
           {isOpen ? (
@@ -412,7 +509,10 @@ const AIAssistantWidget = ({ role = 'farmer' }) => {
       </button>
 
       {isOpen && (
-        <div className="fixed right-24 top-1/2 -translate-y-1/2 z-50 w-[420px] max-w-[calc(100vw-5rem)] h-[560px] bg-white border border-emerald-100 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div
+          className="fixed z-50 w-[420px] max-w-[calc(100vw-5rem)] h-[560px] bg-white border border-emerald-100 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+          style={panelStyle}
+        >
           <div className="px-5 py-4 border-b border-emerald-100 flex items-center gap-3 bg-gradient-to-r from-green-50 to-emerald-100">
             <div className="h-9 w-9 rounded-full bg-white flex items-center justify-center shadow-sm">
               <Bot size={18} className="text-green-700" />
