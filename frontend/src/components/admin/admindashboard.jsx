@@ -528,8 +528,7 @@ const AdminDashboard = () => {
       {editUser    && <EditUserModal    user={editUser}    onClose={() => setEditUser(null)}    onSaved={handleUserSaved} />}
       {suspendUser && <SuspendUserModal user={suspendUser} onClose={() => setSuspendUser(null)} onToggled={handleSuspendToggled} />}
 
-      {/* Header */}
-      <header className="bg-[#F7FAF2] border-b border-green-100 shadow-sm sticky top-0 z-50">
+      <header className="hidden bg-[#F7FAF2] border-b border-green-100 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">

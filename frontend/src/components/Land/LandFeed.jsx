@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../utils/api';
+import { getMediaUrl } from '../../utils/media';
 
 const LandFeed = ({ embedded = false }) => {
   const [lands, setLands] = useState([]);
@@ -8,16 +9,6 @@ const LandFeed = ({ embedded = false }) => {
   const [reportingId, setReportingId] = useState(null);
   const [reportReason, setReportReason] = useState('');
   const [reportedIds, setReportedIds] = useState([]);
-
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return '';
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      return imagePath;
-    }
-    const apiBaseUrl = api.defaults.baseURL || '';
-    const backendOrigin = apiBaseUrl.replace(/\/api\/?$/, '');
-    return `${backendOrigin}${imagePath.startsWith('/') ? imagePath : `/${imagePath}`}`;
-  };
 
   useEffect(() => {
     fetchVerifiedLands();
@@ -86,7 +77,7 @@ const LandFeed = ({ embedded = false }) => {
               <div key={land._id} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
                 {land.landImage ? (
                   <img
-                    src={getImageUrl(land.landImage)}
+                    src={getMediaUrl(land.landImage, 'land')}
                     alt={land.title}
                     className="h-56 w-full object-cover"
                   />
