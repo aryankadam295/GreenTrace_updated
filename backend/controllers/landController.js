@@ -1,16 +1,7 @@
 import Land from '../models/Land.js';
 import User from '../models/User.js';
 import { verifyDocumentWithOCR } from '../utils/ocrService.js';
-import { getStoredFileResponse } from '../utils/storage.js';
-
-const getDocumentUrl = (file) => {
-  if (file.location) {
-    return file.location;
-  }
-
-  const normalizedPath = (file.path || '').replace(/\\/g, '/');
-  return normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
-};
+import { getStoredFileResponse, getUploadedFileUrl } from '../utils/storage.js';
 
 // @desc    Create new land listing
 // @route   POST /api/land
@@ -49,7 +40,7 @@ export const createLand = async (req, res) => {
 
       return {
         type: docType,
-        url: getDocumentUrl(file),
+        url: getUploadedFileUrl(file),
       };
     });
 
@@ -72,7 +63,7 @@ export const createLand = async (req, res) => {
       state,
       rentPrice,
       rentDuration: normalizedRentDuration,
-      landImage: landImageFile ? getDocumentUrl(landImageFile) : '',
+      landImage: landImageFile ? getUploadedFileUrl(landImageFile) : '',
       owner: req.user.id,
       selfDeclaration: isSelfDeclared,
       documents,

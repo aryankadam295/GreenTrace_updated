@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
+import { getMediaUrl } from '../../utils/media';
 
 const statusStyles = {
   pending: 'bg-amber-100 text-amber-800',
@@ -13,16 +14,6 @@ const MyLandListings = ({ embedded = false, onAddLand }) => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return '';
-    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
-      return imagePath;
-    }
-    const apiBaseUrl = api.defaults.baseURL || '';
-    const backendOrigin = apiBaseUrl.replace(/\/api\/?$/, '');
-    return `${backendOrigin}${imagePath.startsWith('/') ? imagePath : `/${imagePath}`}`;
-  };
 
   useEffect(() => {
     fetchMyLands();
@@ -95,7 +86,7 @@ const MyLandListings = ({ embedded = false, onAddLand }) => {
               <div key={land._id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
                 {land.landImage ? (
                   <img
-                    src={getImageUrl(land.landImage)}
+                    src={getMediaUrl(land.landImage, 'land')}
                     alt={land.title}
                     className="mb-5 h-52 w-full rounded-2xl object-cover"
                   />
