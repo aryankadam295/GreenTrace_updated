@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '../config/env.js';
 import path from 'path';
 import fs from 'fs';
 import { DeleteObjectCommand, GetObjectCommand, S3Client } from '@aws-sdk/client-s3';

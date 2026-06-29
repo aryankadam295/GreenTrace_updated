@@ -1,12 +1,10 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-import dotenv from "dotenv";
+import "../config/env.js";
 
 import User from "../models/User.js";
 import Product from "../models/Product.js";
 import Equipment from "../models/Equipment.js";
-
-dotenv.config();
 
 const MONGO_URI = process.env.MONGODB_URL || process.env.MONGODB_URL_DIRECT;
 

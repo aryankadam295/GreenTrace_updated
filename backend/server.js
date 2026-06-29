@@ -1,5 +1,5 @@
 import express from "express";
-import "dotenv/config";
+import "./config/env.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
@@ -21,6 +21,7 @@ import merchantCommunityRoutes from "./routes/merchantCommunityRoutes.js";
 import schemeRoutes from "./routes/schemeRoutes.js";
 import marketPriceRoutes from "./routes/marketPriceRoutes.js";
 import assistantRoutes from "./routes/assistantRoutes.js";
+import { getStoredFileResponse } from "./utils/storage.js";
 
 const app = express();
 const allowedOrigins = new Set(
@@ -55,6 +56,58 @@ app.use(cookieParser());
 // Test Route
 app.get("/api/test", (req, res) => {
   res.status(200).json({ message: "Server is working!" });
+});
+
+if (process.env.NODE_ENV !== "production") {
+  app.get("/api/debug/aws", (req, res) => {
+    const accessKeyId = process.env.AWS_ACCESS_KEY_ID || "";
+
+    res.status(200).json({
+      awsConfigured: Boolean(
+        process.env.AWS_ACCESS_KEY_ID &&
+          process.env.AWS_SECRET_ACCESS_KEY &&
+          process.env.AWS_S3_BUCKET_NAME
+      ),
+      accessKeyPrefix: accessKeyId
+        ? `${accessKeyId.slice(0, 6)}...${accessKeyId.slice(-4)}`
+        : "",
+      bucket: process.env.AWS_S3_BUCKET_NAME || "",
+      region: process.env.AWS_REGION || "",
+      fileStorage: process.env.FILE_STORAGE || "s3-if-configured",
+    });
+  });
+}
+
+app.get("/api/media", async (req, res) => {
+  try {
+    const source = String(req.query.url || "");
+
+    if (!source) {
+      return res.status(400).json({ message: "Missing media url." });
+    }
+
+    const isLocalUpload = source.startsWith("/uploads/");
+    const isS3Url = /^https?:\/\/[^/]+\.s3[.-][^/]*amazonaws\.com\//i.test(source);
+
+    if (!isLocalUpload && !isS3Url) {
+      return res.status(400).json({ message: "Unsupported media url." });
+    }
+
+    const storedFile = await getStoredFileResponse(source);
+
+    if (!storedFile?.Body) {
+      return res.status(404).json({ message: "Media not found." });
+    }
+
+    if (storedFile.ContentType) {
+      res.setHeader("Content-Type", storedFile.ContentType);
+    }
+
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    storedFile.Body.pipe(res);
+  } catch (error) {
+    res.status(404).json({ message: "Media not found." });
+  }
 });
 
 // API Routes
