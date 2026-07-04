@@ -2,11 +2,11 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api' || 'https://greentrace-updated.onrender.com/api',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+    baseURL: import.meta.env.VITE_API_BASE_URL,
+    withCredentials: true,
+    headers: {
+        "Content-Type": "application/json",
+    },
 });
 
 // Request interceptor to add auth token if available
